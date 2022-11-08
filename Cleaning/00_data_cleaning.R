@@ -21,7 +21,7 @@ exp <- exp%>%
 # DATA EXPLORATION ############################################################
 
 exp_terminals <- exp %>% 
-    group_by(departure_terminal, year, month) %>%
+    group_by(departure_terminal, year, month, year_month) %>%
     summarise(monthly_mean = mean(price_usd_mmbtu), monthly_mean_NA = mean(price_usd_mmbtu, na.rm = TRUE))
 
 mean(exp$price_usd_mmbtu, na.rm = TRUE)
@@ -29,13 +29,15 @@ mean(exp_terminals$monthly_mean, na.rm=TRUE)
 
 sabine_prices <- subset(exp_terminals,  exp_terminals$departure_terminal == "Sabine Pass, Louisiana")
 christi_prices <- subset(exp_terminals,  exp_terminals$departure_terminal == "Corpus Christi, Texas")
-
+sabine_prices_r <- sabine_prices[-1,] 
 
 # WEIGHTED MONTHLY PRICES ####################################################
 # recreating weighed monthly prices
 exp_weighted_prices <- exp %>% 
-  group_by(departure_terminal, year, month) %>%
+  group_by(departure_terminal, year_month, month, year) %>%
   summarise(monthly_mean = mean(price_usd_mmbtu), total_gas = sum(volume_mcf))
+
+cove_prices <- subset(exp_weighted_prices,  exp_weighted_prices$departure_terminal == "Cove Point, Maryland")
 
 # testing one weighted mean that we have been given, we see the below is the correct way to calculate
 # the weighted mean given by the DOE
@@ -105,7 +107,6 @@ t2 <- ts(exp_dockets$count_long, start=c(2016, 2), end=c(2022, 7), frequency=12)
 
 ts_dockets<- cbind(t1,t2)
 colnames(ts_dockets) <- c("Short Term", "Long Term") 
-
 
 # GRAPH 1
 autoplot(ts_dockets, facets = FALSE) +  labs(x = "Time", y = "Monthly Exports") + labs(color="Type") 
