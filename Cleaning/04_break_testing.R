@@ -38,7 +38,9 @@ first_date <- date_series[length(date_series)]
 price_date_NBP <- NBP_prices[,c(1,2)]
 colnames(price_date_NBP) <- c("time", "price")
 
-# now we insert NA into missing days
+# now we create a continuous time series (continous in the sense of no gaps in 
+# our date column, but gaps in the price series) - we add row entries for the 
+# missing days and impute them with NA values 
 
 raw.data <- price_date_NBP
 raw.data$time <- anydate(raw.data$time)
@@ -49,22 +51,28 @@ data.length <- length(sorted.data$time)
 time.max <- sorted.data$time[1]
 time.min <- sorted.data$time[data.length]
 
-
 all.dates <- seq(time.min, time.max, by="day")
 all.dates.frame <- data.frame(list(time=all.dates))
 
 merged.data <- merge(all.dates.frame, sorted.data, all=T)
 NBP_price_df <- merged.data
 
-merged.data$price[which(is.na(merged.data$price))] <- 0
-merged.data <- merged.data[-1,]
-merged.data <-  merged.data[-9405,]
+# now NBP_price_df is our final df frame
 
-ts_NBP_prices <- merged.data$price
+NBP_price_df_COPY <- NBP_price_df 
+
+# we can get the ts to start exactly on the 2nd month of 1997 by deleting the first
+# three rows: 
+NBP_price_df_COPY  <- NBP_price_df_COPY [-c(1,2,3),]
+
+# we can also get the ts to end exactly on the 10th month by deleting the very last
+# entry 
+dim(NBP_price_df_COPY)
+NBP_price_df_COPY  <-  NBP_price_df_COPY[-9405,]
+
+ts_NBP_prices <- NBP_price_df_COPY$price
 
 term_ts_nbp <- ts(ts_NBP_prices, start=c(1997, 2), end=c(2022, 10), frequency=365)
-
-# there are MANY zeros in this data set so the graph is essentially black
 
 # now we plot our time series
 
@@ -72,50 +80,15 @@ autoplot(term_ts_nbp) + labs(x = "Time", y = "Price, USD/mmBtu") +
   labs(color="Destination") + theme_gray() + scale_y_continuous(labels=scales::comma) +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
 
-# here we look at NBP and Henry Hub prices, looking at breaks in mean/variances
+# CONVERTING DAILY NBP INTO WEEKLY ############################################
 
-# the following needs to change alot
-# convert NBP daily df into weekly df:
-NBP_price_df_weekly <- NBP_price_df  %>% 
-  mutate(year_month = format(time, "%Y-%V")) %>%
-  group_by(year_month) %>%
-  summarise(weekly_mean = mean(price, na.rm = TRUE))
+week_nbp <- as.Date(cut(NBP_price_df$time, "week"))
+weekly_mean_nbp <- aggregate(price ~ week_nbp,  NBP_price_df, mean)
 
-NBP_price_df_weekly <- NBP_price_df_weekly[-1,]
-NBP_price_df_weekly <- NBP_price_df_weekly[-dim(NBP_price_df_weekly)[1],]
+plot_ts_nbp <- ggplot(weekly_mean_nbp, aes(x = week_nbp, y = price))  +
+  geom_line(color="steelblue") 
 
-# for some reason there are 53 weeks in this year and not 52 
-# so we will delete those entries
-# well get back to this lates
-NBP_price_df_weekly <- NBP_price_df_weekly[-dim(NBP_price_df_weekly)[1],]
-NBP_price_df_weekly <- NBP_price_df_weekly[-dim(NBP_price_df_weekly)[1],]
-
-
-time.min <- as.Date("1997-01-01")
-time.max <- as.Date("2022-11-01")
-all.dates <- seq(time.min, time.max, by="week")
-
-check <- cbind(all.dates, NBP_price_df_weekly)
-check <- check[,-2]
-
-dim(check)
-
-
-plot_ts <- ggplot(check, aes(x = all.dates, y = weekly_mean))  +
-  geom_line(color="steelblue") #+ 
-  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[195]), linetype = 2) + 
-  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[402]), linetype = 2) + 
-  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[619]), linetype = 2) + 
-  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[934]), linetype = 2) + 
-  #xlab("")
-
-plot_ts
-
-
-# 1348 rows
-
-
-
+plot_ts_nbp
 
 # HENRY HUB ####################################################################
 
@@ -123,14 +96,10 @@ plot_ts
 colnames(henry_hub_series) <- c("time", "price")
 
 # delete the first two rows since they are just NA:
-# the following is executed twice: 
 
-henry_hub_series <- henry_hub_series[-1,]
+henry_hub_series <- henry_hub_series[-c(1,2),]
 
-#now we convert to time series and impute NA as zeroes for missing dates: 
-
-
-# now we insert NA into missing days
+# now we add the missing days back in and create NA where they were:
 
 raw.data <- henry_hub_series
 raw.data$time <- anydate(raw.data$time)
@@ -141,22 +110,25 @@ data.length <- length(sorted.data$time)
 time.min <- sorted.data$time[1]
 time.max <- sorted.data$time[data.length]
 
-
 all.dates <- seq(time.min, time.max, by="day")
 all.dates.frame <- data.frame(list(time=all.dates))
 
 merged.data <- merge(all.dates.frame, sorted.data, all=T)
-merged.data <- merged.data[-1,]
 hh_prices <- merged.data
-
-#merged.data$price[which(is.na(merged.data$price))] <- 0
-#merged.data <- merged.data[-1,]
-#merged.data <-  merged.data[-9405,]
-
-ts_HH_prices <- merged.data$price
 
 # we want to start this time series exactly on the second month of 1997 so we will
 # eliminate all entries before that time:
+
+hh_prices_00 <- hh_prices
+hh_prices_00 <- hh_prices_00[-c(1:26),]
+
+# we also need to re-index the rownames:
+
+row.names(hh_prices_00) <- NULL
+
+# now we construct the time series: 
+
+ts_HH_prices <- hh_prices_00$price
 
 term_ts_hh <- ts(ts_HH_prices, start=c(1997, 02), end=c(2022, 11), frequency=365)
 
@@ -164,45 +136,52 @@ autoplot(term_ts_hh) + labs(x = "Time", y = "Price, USD/mmBtu") +
   labs(color="Destination") + theme_gray() + scale_y_continuous(labels=scales::comma) +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
 
-# there are MANY NA Values in the daily series
-# perhaps should use weekly series instead, removing these one off pertubations in the data
+# REMOVING OUTLIERS in daily henry hub ########################################
 
 # first, we are going to remove the outliers -- there are two significant outliers 
-# in this data set we want to remove
- 
-# we create a copy of our merged data set called hh_prices
+# in this data set we want to remove. We create another copy of our merged data 
+# set called hh_prices_01, where we use the dataset that starts exactly on the 
+# first day of 1997-02-01
 
-hh_prices <- merged.data
+hh_prices_01 <- hh_prices_00
 
-# let us remove the below two max prices: 
-# or impute them with NA values
+# let us remove the below two max prices and impute them with NA values
 
-# we run the below TWICE which removes our two greatest outliers
-# run once
-index_max <- which.max(hh_prices$price)
-hh_prices[index_max,]$price <- NA
+index_max <- which.max(hh_prices_01$price)
+hh_prices_01[index_max,]$price <- NA
 
-# run twice
-index_max <- which.max(hh_prices$price)
-hh_prices[index_max,]$price <- NA
+# now get the next largest value and set to NA 
 
+index_max <- which.max(hh_prices_01$price)
+hh_prices_01[index_max,]$price <- NA
 
 # now plot again to show the difference
 
-ts_HH_prices_1 <- hh_prices$price
-term_ts_hh_1 <- ts(ts_HH_prices_1, start=c(1997, 02), end=c(2022, 11), frequency=365)
+ts_HH_prices_01 <- hh_prices_01$price
+term_ts_hh_01 <- ts(ts_HH_prices_01, start=c(1997, 02), end=c(2022, 11), frequency=365)
 
-autoplot(term_ts_hh_1) + labs(x = "Time", y = "Price, USD/mmBtu") + 
+autoplot(term_ts_hh_01) + labs(x = "Time", y = "Price, USD/mmBtu") + 
   labs(color="Destination") +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
 
 # GROUPING DAILY DATA BY WEEK #################################################
 
-week <- as.Date(cut(hh_prices$time, "week"))
-weekly_mean_hh <- aggregate(price ~ week,  hh_prices_convert, mean)
+# we use the daily data with the outliers removed to construct our weekly data: 
+
+week <- as.Date(cut(hh_prices_01$time, "week"))
+
+weekly_mean_hh <- aggregate(price ~ week,  hh_prices_01, mean)
+
+# the above misses the week of 2005-09-26 -- this is because the corresponding
+# prices for that week have all NAs in them. We will impute this row and add
+# and NA value to it so our time series will correspond better:
+
+new_row <- data.frame(week = as.Date("2005-09-26"), price = NA)
+newData <- rbind(weekly_mean_hh[1:452,], new_row, weekly_mean_hh[453:1347,] )
+henry_hub_weekly_00 <- newData
 
 #now we convert to a time series
-ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+ts_hh_weekly <- ts(henry_hub_weekly_00$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
      
 autoplot(ts_hh_weekly) + labs(x = "Time", y = "Price, USD/mmBtu") + 
   labs(color="Destination") +
@@ -210,22 +189,26 @@ autoplot(ts_hh_weekly) + labs(x = "Time", y = "Price, USD/mmBtu") +
 
 # COMPARE TO ONLINE PUBLISHED HENRY HUB PRICES ################################
 
-# let us compare the weekly published henry hub to our found one:
-
+# let us compare the weekly published henry hub to our found one, 
 # from local repository, 'hh_weekly'
 
-hh_weekly_O <- hh_weekly
+hh_weekly_online <- hh_weekly
 
-colnames(hh_weekly_O) <- c("time", "price")
-hh_weekly_O <- hh_weekly_O[-1,]
+colnames(hh_weekly_online) <- c("time", "price")
 
-ts_hh_weekly_online <- ts(hh_weekly_O$price, start=c(1997, 01), end=c(2022, 11), frequency=52)
+# we remove the first three rows
+
+hh_weekly_online <- hh_weekly_online[-c(1,2,3),]
+
+ts_hh_weekly_online <- ts(hh_weekly_online$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
 
 # the below is a comparison between the online weekly henry hub prices
-# and the ones that I have computed by removing the outliers
+# and the ones that I have computed by removing the outliers - there is some 
+# slight lag as the weekly moving interval is moved by three days in the online 
+# version. 
 
 henry_hub_weekly_comp <- cbind(ts_hh_weekly_online, ts_hh_weekly)
-colnames(henry_hub_weekly_comp) <- c("Computed from daily, outliers removed", "Online weekly series")
+colnames(henry_hub_weekly_comp) <- c("Online weekly series", "Computed from daily, two outliers removed")
 autoplot(henry_hub_weekly_comp) + labs(x = "Time", y = "Price, USD/mmBtu") + 
   labs(color="Destination") +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
@@ -233,21 +216,38 @@ autoplot(henry_hub_weekly_comp) + labs(x = "Time", y = "Price, USD/mmBtu") +
 
 # BREAKPOINT PLOTTING #########################################################
 
-# We now have a weekly times series for Henry Hub data. Let us now compute some 
-# summary statistics about the Hnry hub:  
+# We now have a weekly times series for Henry Hub data and for NBP. Let us compute
+# the break points for both the weekly time series, stored in :
+#  - weekly time series HH: ** henry_hub_weekly_00
+#  - daily time series HH: ** hh_prices_01
+#  - weekly time series NBP: ** weekly_mean_nbp
+#  - daily time series NBP: ** NBP_price_df_COPY
 
-# store the breakdates
 
-bp_ts <- breakpoints(ts_hh_weekly ~ 1)
+# We will compute the break dates for HH weekly first: 
+hh_weekly_03 <- henry_hub_weekly_00[-1,]
+ts_weekly_hh <- ts(hh_weekly_03$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+bp_hh_weekly <- breakpoints(ts_weekly_hh  ~ 1)
+bp_hh_weekly 
+# break points are at index 196 402 617 932 
 summary(bp_ts)
 
-# we conduct the following purely for plotting purposes
-hh_prices_weekly
-time.max <- as.Date("2022-12-01")
-time.min <- as.Date("1997-01-01")
-# we remove the first row of the henry hub data frame:
+# Now we will compute the break dates for HH daily: 
+ts_daily_hh <- ts(hh_prices_01$price, start=c(1997, 02), end=c(2022, 11), frequency=365)
+bp_hh_daily <- breakpoints(ts_daily_hh   ~ 1)
 
-# the break point indices are 196, 402, 617, 932 corresponding to ts_hh_wekly
+# compute break points for weekly NBP
+weekly_mean_nbp_01 <- weekly_mean_nbp[-1,]
+ts_weekly_nbp <- ts(weekly_mean_nbp_01$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+bp_nbp_weekly <- breakpoints(ts_weekly_nbp  ~ 1)
+
+# break points are at index 385, 711, 907, 1114
+bp_nbp_weekly
+
+
+# compute break points for daily NBP
+
+
 # we add them using the vline function
 
 plot_ts <- ggplot(weekly_mean_hh, aes(x = week, y = price))  +
@@ -281,9 +281,69 @@ summary(fm.ri)
 plot(ts_hh_weekly_TEST, type = 'l')
 lines(fitted(fm.ri), col = 2)
 
-# we have calculated five breaks in the above time series 
+# we have calculated five breaks in the above time series
 
+# BIVARIATE BREAK TESTING ######################################################
 # lets compare this to NBP prices
+
+# let us make sure we have the right NBP prices first:
+
+# the weekly time series for NBP is *weekly_mean_nbp*
+# let us convert into a time series:
+
+# DATE CHECKING ###############################################################
+# the last date is 2022-09-26
+tail(weekly_mean_nbp, 1)
+# the first date is 1997-01-27
+head(weekly_mean_nbp, 1)
+# 
+
+# now for henry hub, the last date is 2022-11-21:
+tail(weekly_mean_hh, 1)
+# while the first recorded date is 1997-02-03: 
+head (weekly_mean_hh, 1)
+
+# we will need to re-concile these recorded dates - we take away one of the latest
+# entries from henry hub since it is slightly ahead. 
+# entry from nbp since it is recorded one week ahead. 
+dim(weekly_mean_hh)
+dim(weekly_mean_nbp)
+
+hh_weekly_BREAK <- weekly_mean_hh[-dim(weekly_mean_hh)[1],]
+
+# the dates are not aligning between these datasets- that is, there is the same
+# amount of entries but differing dates attached to them. Let us examine this:
+dates_check <- cbind(hh_weekly_BREAK, weekly_mean_nbp)
+dates_check <- dates_check[,-2]
+dates_check <- dates_check[,-3]
+colnames(dates_check) <- c('hh_week', 'nbp_week')
+head(dates_check)
+
+# we will shuffle up nbp week by one entry, and delete a later entry of henry hub
+# create copies
+
+weekly_mean_nbp_0 <- weekly_mean_nbp
+hh_weekly_BREAK_0 <- hh_weekly_BREAK
+
+hh_weekly_BREAK_0 <- hh_weekly_BREAK_0[-dim(hh_weekly_BREAK_0)[1],]
+weekly_mean_nbp_0 <- weekly_mean_nbp_0[-1,]
+dates_check_0 <- cbind(hh_weekly_BREAK_0, weekly_mean_nbp_0)
+dates_check_0 <- dates_check_0[,-2]
+dates_check_0 <- dates_check_0[,-3]
+colnames(dates_check_0) <- c('hh_week', 'nbp_week')
+head(dates_check_0)
+tail(dates_check_0)
+
+# after the 451st entry, the dates diverge
+length(which(dates_check_0$hh_week == dates_check_0$nbp_week))
+dates_check_0[c(450,451, 452, 453),]
+
+# henry hub data frame has missing 2005-09-26 entry -- why? 
+ 
+# the weekly time series for Henry Hub
+
+ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+
 
 
 
