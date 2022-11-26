@@ -9,6 +9,7 @@ library(stats)
 library(strucchange)
 library(forecast)
 library(tseries)
+library(data.table)
 
 # IMPORTING DATA ##############################################################
 
@@ -53,6 +54,7 @@ all.dates <- seq(time.min, time.max, by="day")
 all.dates.frame <- data.frame(list(time=all.dates))
 
 merged.data <- merge(all.dates.frame, sorted.data, all=T)
+NBP_price_df <- merged.data
 
 merged.data$price[which(is.na(merged.data$price))] <- 0
 merged.data <- merged.data[-1,]
@@ -65,14 +67,55 @@ term_ts_nbp <- ts(ts_NBP_prices, start=c(1997, 2), end=c(2022, 10), frequency=36
 # there are MANY zeros in this data set so the graph is essentially black
 
 # now we plot our time series
+
 autoplot(term_ts_nbp) + labs(x = "Time", y = "Price, USD/mmBtu") + 
   labs(color="Destination") + theme_gray() + scale_y_continuous(labels=scales::comma) +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
+
 # here we look at NBP and Henry Hub prices, looking at breaks in mean/variances
 
+# the following needs to change alot
+# convert NBP daily df into weekly df:
+NBP_price_df_weekly <- NBP_price_df  %>% 
+  mutate(year_month = format(time, "%Y-%V")) %>%
+  group_by(year_month) %>%
+  summarise(weekly_mean = mean(price, na.rm = TRUE))
 
-# let us now do the same for Henry Hub daily price series:
-# which have less zeroes:
+NBP_price_df_weekly <- NBP_price_df_weekly[-1,]
+NBP_price_df_weekly <- NBP_price_df_weekly[-dim(NBP_price_df_weekly)[1],]
+
+# for some reason there are 53 weeks in this year and not 52 
+# so we will delete those entries
+# well get back to this lates
+NBP_price_df_weekly <- NBP_price_df_weekly[-dim(NBP_price_df_weekly)[1],]
+NBP_price_df_weekly <- NBP_price_df_weekly[-dim(NBP_price_df_weekly)[1],]
+
+
+time.min <- as.Date("1997-01-01")
+time.max <- as.Date("2022-11-01")
+all.dates <- seq(time.min, time.max, by="week")
+
+check <- cbind(all.dates, NBP_price_df_weekly)
+check <- check[,-2]
+
+dim(check)
+
+
+plot_ts <- ggplot(check, aes(x = all.dates, y = weekly_mean))  +
+  geom_line(color="steelblue") #+ 
+  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[195]), linetype = 2) + 
+  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[402]), linetype = 2) + 
+  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[619]), linetype = 2) + 
+  #geom_vline(xintercept = as.numeric(weekly_hh$all.dates[934]), linetype = 2) + 
+  #xlab("")
+
+plot_ts
+
+
+# 1348 rows
+
+
+
 
 # HENRY HUB ####################################################################
 
@@ -155,18 +198,11 @@ autoplot(term_ts_hh_1) + labs(x = "Time", y = "Price, USD/mmBtu") +
 
 # GROUPING DAILY DATA BY WEEK #################################################
 
-hh_prices
-rownames(hh_prices) = 1:dim(hh_prices)[1]
-
-hh_prices_weekly <- hh_prices %>% 
-  mutate(year_month = format(time, "%Y-%V")) %>%
-  group_by(year_month) %>%
-  summarise(weekly_mean = mean(price, na.rm = TRUE))
-
-hh_prices_weekly <- hh_prices_weekly[-1,]
+week <- as.Date(cut(hh_prices$time, "week"))
+weekly_mean_hh <- aggregate(price ~ week,  hh_prices_convert, mean)
 
 #now we convert to a time series
-ts_hh_weekly <- ts(hh_prices_weekly$weekly_mean, start=c(1997, 02), end=c(2022, 11), frequency=52)
+ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
      
 autoplot(ts_hh_weekly) + labs(x = "Time", y = "Price, USD/mmBtu") + 
   labs(color="Destination") +
@@ -211,22 +247,15 @@ time.max <- as.Date("2022-12-01")
 time.min <- as.Date("1997-01-01")
 # we remove the first row of the henry hub data frame:
 
-# we can create a column of dates and add it to our data frame
-henry_hub_test <- hh_prices_weekly[-1,]
-all.dates <- seq(time.min, time.max, by="week")
-weekly_hh <- cbind(henry_hub_test , all.dates)
-weekly_hh <- weekly_hh[,-1]
-
-
-# the break point indices are 196, 403, 619, 935 corresponding to ts_hh_wekly
+# the break point indices are 196, 402, 617, 932 corresponding to ts_hh_wekly
 # we add them using the vline function
 
-plot_ts <- ggplot(weekly_hh, aes(x = all.dates, y = weekly_mean))  +
+plot_ts <- ggplot(weekly_mean_hh, aes(x = week, y = price))  +
   geom_line(color="steelblue") + 
-  geom_vline(xintercept = as.numeric(weekly_hh$all.dates[195]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(weekly_hh$all.dates[402]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(weekly_hh$all.dates[619]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(weekly_hh$all.dates[934]), linetype = 2) + 
+  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[195]), linetype = 2) + 
+  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[402]), linetype = 2) + 
+  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[617]), linetype = 2) + 
+  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[932]), linetype = 2) + 
   xlab("")
   
 plot_ts
@@ -253,6 +282,8 @@ plot(ts_hh_weekly_TEST, type = 'l')
 lines(fitted(fm.ri), col = 2)
 
 # we have calculated five breaks in the above time series 
+
+# lets compare this to NBP prices
 
 
 
