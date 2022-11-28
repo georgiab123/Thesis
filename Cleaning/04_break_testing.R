@@ -16,8 +16,9 @@ library(data.table)
 
 # import price series data from local repository
 
-NBP_prices <- collated_prices
+NBP_prices <- NBP_series
 henry_hub_series <- henry_hub
+crude_ts <- Crude_WTI_OK
 
 # DATA CLEANING  ##############################################################
 
@@ -219,6 +220,19 @@ autoplot(henry_hub_weekly_comp) + labs(x = "Time", y = "Price, USD/mmBtu") +
   labs(color="Type") +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
 
+# CRUDE_WTI  ##################################################################
+
+colnames(crude_ts) <- c("time", "price")
+#remove first two rows since both NA values:
+crude_ts <- crude_ts[-c(1,2),]
+# we want 1997-2 onwards to match Henry Hub price, this is the 580th entry
+crude_ts <- crude_ts[-c(1:579),]
+# check for NA values -- there are none:
+which(is.na(crude_ts$price))
+# convert to date formats:
+crude_ts$time <- as.Date(crude_ts$time)
+# now we have a ts going from 1997-2 to 2022-11
+
 
 # BREAKPOINT PLOTTING #########################################################
 
@@ -244,28 +258,18 @@ ts_weekly_hh <- ts(hh_weekly_03$price, start=c(1997, 02), end=c(2022, 11), frequ
 bp_hh_weekly <- breakpoints(ts_weekly_hh  ~ 1, format.times = TRUE)
 # break points are at index 196 402 617 932 
 summary(bp_hh_weekly)
-
-plot(ts_weekly_hh)
-bp.nile <- breakpoints(Nile ~ 1)
-summary(bp.nile)
-plot(bp_hh_weekly)
-## compute breakdates corresponding to the
+# compute breakdates corresponding to the
 ## breakpoints of minimum BIC segmentation
 breakdates(bp_hh_weekly)
 ## confidence intervals
 ci.hh <- confint(bp_hh_weekly)
-breakdates(bp_hh_weekly)
 ci.hh
-plot(ts_weekly_hh) + lines(ci.nile)
-
-
-
-
-# compute break points for daily NBP
+#below functionality shows breakpoints and CI for them: 
+plot(ts_weekly_hh,  xlab="Time", ylab="USD/ MMBtu")
+lines(ci.hh)
 
 
 # we add them using the vline function
-
 plot_ts <- ggplot(hh_weekly_03, aes(x = week, y = price))  +
   geom_line(color="steelblue") + 
   geom_vline(xintercept = as.numeric(hh_weekly_03$week[196]), linetype = 2) + 
@@ -273,8 +277,81 @@ plot_ts <- ggplot(hh_weekly_03, aes(x = week, y = price))  +
   geom_vline(xintercept = as.numeric(hh_weekly_03$week[617]), linetype = 2) + 
   geom_vline(xintercept = as.numeric(hh_weekly_03$week[917]), linetype = 2) + 
   xlab("") + labs(x = "Time", y = "Price, USD/mmBtu") 
-plot_ts
 
+#BIVARIATE BREAK TESTING ######################################################
+
+# let's check HH against WTI crude: 
+# we will use the online HH for ths, since its dates match perfectly: 
+dim(hh_weekly_online)
+dim(crude_ts)
+# there is a missing value between these two dataframes, but the beginnning and 
+# end match perfectly
+# we convert to ts:
+
+ts_weekly_online_hh <- ts(hh_weekly_online$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+ts_weekly_online_crude <- ts(crude_ts$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+
+# now that we have converted to ts, they have the same length. 
+length(ts_weekly_online_hh)
+length(ts_weekly_online_crude)
+# check for NA values -- no NA values: 
+which(is.na(ts_weekly_online_hh))
+which(is.na(ts_weekly_online_crude ))
+# now we do break testing:
+
+
+
+bp_crude_hh <- breakpoints(ts_weekly_online_hh  ~ ts_weekly_online_crude)
+bp_crude_hh
+ci.crude_hh <- confint(bp_crude_hh)
+
+plot(ts_weekly_online_crude,  xlab="Time", ylab="Price", col = "blue")
+lines(ts_weekly_online_hh, col = "black")
+lines(ci.crude_hh)
+legend('topright', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
+       col=c("blue", "black"), lty=1, cex=0.8)
+
+
+# first we need to take the first difference of both of these time series:
+ts_hh_weekly_diffed <- diff(ts_weekly_online_hh) 
+ts_hh_crude_diffed <- diff(ts_weekly_online_crude) 
+
+# check the below ECM is actually correct: 
+coint.res <- residuals(lm(ts_weekly_online_hh ~ ts_weekly_online_crude))
+coint.res <- stats::lag(ts(coint.res, start = c(1997,2), freq = 52), k = -1)
+
+# now we change the window of question we are looking at: 
+relations <- cbind(ts_hh_weekly_diffed, ts_hh_crude_diffed, ts_weekly_online_hh, ts_weekly_online_crude, coint.res)
+relations_wind <- window(relations, start = c(1997,3), end = c(2022,10))
+colnames(relations_wind) <- c("diff.hh", "diff.crude", "hh", "crude", "coint.res1")
+
+
+ecm.model <- diff.hh ~ coint.res1 + diff.crude 
+bp.ecm <- breakpoints(diff.hh ~ coint.res1 + diff.crude, data = relations_wind )
+ci.ecm <- confint(bp.ecm)
+
+# it should be first differencing really
+plot(ts_hh_crude_diffed ,  xlab="Time", ylab="Price", col = "blue")
+lines(ts_hh_weekly_diffed, col = "black")
+lines(ci.ecm)
+legend('topleft', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
+       col=c("blue", "black"), lty=1, cex=0.8)
+
+
+
+ocus <- efp(ecm.model, type="OLS-CUSUM", data = relations_wind)
+me <- efp(ecm.model, type="ME", data=relations_wind, h=0.2)
+ocus
+bound.ocus <- boundary(ocus, alpha=0.05)
+plot(ocus)
+plot(me, functional = NULL) 
+sctest(ocus)
+fs <- Fstats(ecm.model, data = relations_wind)
+fs
+plot(fs)
+plot(fs, aveF=TRUE)
+plot(fs, pval=TRUE)
+sctest(fs, type="expF")
 
 ###############################################################################
 
