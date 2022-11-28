@@ -196,9 +196,15 @@ hh_weekly_online <- hh_weekly
 
 colnames(hh_weekly_online) <- c("time", "price")
 
-# we remove the first three rows
+# we remove the first two rows since they are missing values / nonsensical
 
-hh_weekly_online <- hh_weekly_online[-c(1,2,3),]
+hh_weekly_online <- hh_weekly_online[-c(1,2),]
+
+# we remove the next four rows as they pertain to January
+
+hh_weekly_online <- hh_weekly_online[-c(1,2,3,4),]
+
+# now we create the time series: 
 
 ts_hh_weekly_online <- ts(hh_weekly_online$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
 
@@ -210,7 +216,7 @@ ts_hh_weekly_online <- ts(hh_weekly_online$price, start=c(1997, 02), end=c(2022,
 henry_hub_weekly_comp <- cbind(ts_hh_weekly_online, ts_hh_weekly)
 colnames(henry_hub_weekly_comp) <- c("Online weekly series", "Computed from daily, two outliers removed")
 autoplot(henry_hub_weekly_comp) + labs(x = "Time", y = "Price, USD/mmBtu") + 
-  labs(color="Destination") +
+  labs(color="Type") +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
 
 
@@ -223,14 +229,54 @@ autoplot(henry_hub_weekly_comp) + labs(x = "Time", y = "Price, USD/mmBtu") +
 #  - weekly time series NBP: ** weekly_mean_nbp
 #  - daily time series NBP: ** NBP_price_df_COPY
 
+# we need to omit an NA value, which is the 452 value for the below to work: 
 
 # We will compute the break dates for HH weekly first: 
+# we get rid of the first row since it is in the month of January
 hh_weekly_03 <- henry_hub_weekly_00[-1,]
+# we need to omit an NA value, so take the average of surround prices and impute: 
+which(is.na(ts_weekly_hh))
+avg_price_imput <- (hh_weekly_03[451,]$price + hh_weekly_03[453,]$price)/2
+hh_weekly_03[452,]$price <- avg_price_imput 
+# now w convert to ts:
 ts_weekly_hh <- ts(hh_weekly_03$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
-bp_hh_weekly <- breakpoints(ts_weekly_hh  ~ 1)
-bp_hh_weekly 
+# we compute breakpoints without any transformation
+bp_hh_weekly <- breakpoints(ts_weekly_hh  ~ 1, format.times = TRUE)
 # break points are at index 196 402 617 932 
-summary(bp_ts)
+summary(bp_hh_weekly)
+
+plot(ts_weekly_hh)
+bp.nile <- breakpoints(Nile ~ 1)
+summary(bp.nile)
+plot(bp_hh_weekly)
+## compute breakdates corresponding to the
+## breakpoints of minimum BIC segmentation
+breakdates(bp_hh_weekly)
+## confidence intervals
+ci.hh <- confint(bp_hh_weekly)
+breakdates(bp_hh_weekly)
+ci.hh
+plot(ts_weekly_hh) + lines(ci.nile)
+
+
+
+
+# compute break points for daily NBP
+
+
+# we add them using the vline function
+
+plot_ts <- ggplot(hh_weekly_03, aes(x = week, y = price))  +
+  geom_line(color="steelblue") + 
+  geom_vline(xintercept = as.numeric(hh_weekly_03$week[196]), linetype = 2) + 
+  geom_vline(xintercept = as.numeric(hh_weekly_03$week[402]), linetype = 2) + 
+  geom_vline(xintercept = as.numeric(hh_weekly_03$week[617]), linetype = 2) + 
+  geom_vline(xintercept = as.numeric(hh_weekly_03$week[917]), linetype = 2) + 
+  xlab("") + labs(x = "Time", y = "Price, USD/mmBtu") 
+plot_ts
+
+
+###############################################################################
 
 # Now we will compute the break dates for HH daily: 
 ts_daily_hh <- ts(hh_prices_01$price, start=c(1997, 02), end=c(2022, 11), frequency=365)
@@ -244,21 +290,6 @@ bp_nbp_weekly <- breakpoints(ts_weekly_nbp  ~ 1)
 # break points are at index 385, 711, 907, 1114
 bp_nbp_weekly
 
-
-# compute break points for daily NBP
-
-
-# we add them using the vline function
-
-plot_ts <- ggplot(weekly_mean_hh, aes(x = week, y = price))  +
-  geom_line(color="steelblue") + 
-  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[195]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[402]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[617]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(weekly_mean_hh$week[932]), linetype = 2) + 
-  xlab("")
-  
-plot_ts
 
 # now need to deduce what type of test  is being used here
 # another method of visualisation below: 
