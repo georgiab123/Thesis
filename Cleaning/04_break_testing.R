@@ -19,6 +19,8 @@ library(data.table)
 NBP_prices <- NBP_prices
 henry_hub_series <- henry_hub
 crude_ts <- Crude_WTI_OK
+japan_korea <- collated_prices
+eu_brent <- EU_BRENT
 
 # DATA CLEANING  ##############################################################
 
@@ -84,6 +86,13 @@ plot_ts_nbp <- ggplot(weekly_mean_nbp, aes(x = week_nbp, y = price))  +
   geom_line(color="steelblue") 
 
 plot_ts_nbp
+
+# now create a TS:
+
+weekly_mean_nbp
+# want to start on 1997-02-03
+weekly_mean_nbp <- weekly_mean_nbp[-1,]
+NBP_ts <- ts(weekly_mean_nbp$price, start = c(1997,02), end = c(2022,10), frequency = 52)
 
 # HENRY HUB ####################################################################
 
@@ -164,7 +173,6 @@ autoplot(term_ts_hh_01) + labs(x = "Time", y = "Price, USD/mmBtu") +
 # we use the daily data with the outliers removed to construct our weekly data: 
 
 week <- as.Date(cut(hh_prices_01$time, "week"))
-
 weekly_mean_hh <- aggregate(price ~ week,  hh_prices_01, mean)
 
 # the above misses the week of 2005-09-26 -- this is because the corresponding
@@ -214,6 +222,17 @@ autoplot(henry_hub_weekly_comp) + labs(x = "Time", y = "Price, USD/mmBtu") +
   labs(color="Type") +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
 
+# WEEKLY TS HENRY HUB OUTLIERS REMOVED ########################################
+
+# this is the weekly henry hub ultimately used:
+
+plot(hh_weekly_online$time, hh_weekly_online$price, type = "l")
+hh_weekly_online_outliers <- hh_weekly_online
+hh_weekly_online_outliers[1254,]$price <- (hh_weekly_online_outliers[1253,]$price + hh_weekly_online_outliers[1255,]$price)/2
+hh_weekly_online_outliers[317,]$price <- (hh_weekly_online_outliers[316,]$price + hh_weekly_online_outliers[318,]$price)/2
+plot(hh_weekly_online_outliers$time,hh_weekly_online_outliers$price, type = "l")
+
+
 # CRUDE_WTI  ##################################################################
 
 colnames(crude_ts) <- c("time", "price")
@@ -228,7 +247,7 @@ crude_ts$time <- as.Date(crude_ts$time)
 # now we have a ts going from 1997-2 to 2022-11
 
 # lets also create a ts with severe outliers removed for the online wekly henry hub
-# and hte only crude
+# and the only crude
 
 plot(crude_ts$time, crude_ts$price, type = "l")
 which.min(crude_ts$price)
@@ -236,12 +255,67 @@ crude_ts[1212,]
 crude_ts_outliers <- crude_ts[-1212,]
 plot(crude_ts_outliers$time, crude_ts_outliers$price, type = "l")
 
-plot(hh_weekly_online$time, hh_weekly_online $price, type = "l")
-hh_weekly_online_outliers <- hh_weekly_online
-hh_weekly_online_outliers[1254,]$price <- (hh_weekly_online_outliers[1253,]$price + hh_weekly_online_outliers[1255,]$price)/2
-hh_weekly_online_outliers[317,]$price <- (hh_weekly_online_outliers[316,]$price + hh_weekly_online_outliers[318,]$price)/2
-plot(hh_weekly_online_outliers$time,hh_weekly_online_outliers$price, type = "l")
-# BREAKPOINT PLOTTING #########################################################
+# JAPAN_KOREA  #################################################################
+
+japan_korea <- japan_korea[-1,]
+japan_korea <- japan_korea[,c(1,2)]
+colnames(japan_korea) <- c("time", "price")
+
+# now we correct for missing values in daily time series
+raw.data <- japan_korea
+raw.data$time <- anydate(raw.data$time)
+raw.data$time <- as.Date(raw.data$time)
+sorted.data <- raw.data
+data.length <- length(sorted.data$time)
+time.max <- sorted.data$time[1]
+time.min <- sorted.data$time[data.length]
+all.dates <- seq(time.min, time.max, by="day")
+all.dates.frame <- data.frame(list(time=all.dates))
+merged.data <- merge(all.dates.frame, sorted.data, all=T)
+japan_korea_df <- merged.data
+
+# now we convert to weekly format:
+week <- as.Date(cut(japan_korea_df$time, "week"))
+weekly_mean_JK <- aggregate(price ~ week,  japan_korea_df, mean)
+which(is.na(weekly_mean_JK))
+
+plot(japan_korea$time, japan_korea$price, type = "l")
+plot(weekly_mean_JK[,1], weekly_mean_JK$price, type = "l")
+
+# from the plot, we have significant discontunity from around 2015 onwards.
+# we will impte these prices using a mean of the surrounding prices:
+
+weekly_IMPUTED_JK <- weekly_mean_JK
+weekly_IMPUTED_JK[15,]$price <- (weekly_IMPUTED_JK[14,]$price + weekly_IMPUTED_JK[17,]$price)/2
+weekly_IMPUTED_JK[16,]$price <- (weekly_IMPUTED_JK[15,]$price + weekly_IMPUTED_JK[17,]$price)/2
+
+#now we plot again and see if discontunuity is removed:
+
+plot(weekly_IMPUTED_JK[,1], weekly_IMPUTED_JK$price, type = "l")
+
+# now we create a ts
+# remove first row so we start exactly in the 10th month of 2012
+
+weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK
+weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK_REMOVED[-1,]
+JK_ts <- ts(weekly_IMPUTED_JK_REMOVED$price, start = c(2012, 10), end = c(2022, 10), frequency = 52)
+
+# EUROPEAN BRENT ##############################################################
+
+eu_brent <- eu_brent[-c(1,2),]
+colnames(eu_brent) <- c("time", "price")
+
+# we just want a subset from 1997 - 02 onwards: 
+eu_brent_sub <- eu_brent[-c(1:508),]
+
+# plot and check for significant outliers:
+plot(eu_brent_sub$time, eu_brent_sub$price, type = "l")
+#nothing too severe, convert to ts:
+
+eu_brent_ts <- ts(eu_brent_sub$price, start = c(1997,02), end = c(2022, 11), frequency =52)
+
+
+# BREAKPOINT PLOTTING ##########################################################
 
 # We now have a weekly times series for Henry Hub data and for NBP. Let us compute
 # the break points for both the weekly time series, stored in :
@@ -303,11 +377,15 @@ ts_weekly_online_crude <- ts(crude_ts$price, start=c(1997, 02), end=c(2022, 11),
 length(ts_weekly_online_hh)
 length(ts_weekly_online_crude)
 # check for NA values -- no NA values: 
+
 which(is.na(ts_weekly_online_hh))
 which(is.na(ts_weekly_online_crude ))
 
 # now we do break testing (on the online time series with outliers imputed) 
+# from df hh_weekly_online_outliers 
 
+ts_hh_outliers <- ts(hh_weekly_online_outliers$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+ts_hh_outliers_diff <- diff(ts_hh_outliers)
 
 bp_crude_hh <- breakpoints(ts_hh_outliers ~ ts_weekly_online_crude)
 bp_crude_hh
@@ -328,88 +406,25 @@ legend('topright', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MM
 
 # first, we test whether these time series are stationary: 
 
-adf.test(ts_weekly_online_hh)
+adf.test(ts_hh_outliers)
 adf.test(ts_weekly_online_crude)
 
 # they are not stationary
 
 # so we need to take the first difference of both of these time series:
 
-ts_hh_weekly_diffed <- diff(ts_weekly_online_hh) 
+ts_hh_outliers_diff <- diff(ts_hh_outliers)
 ts_hh_crude_diffed <- diff(ts_weekly_online_crude) 
 
 # lets check whether they are stationary now -- they are both stationary
 # and of order one! 
 
-adf.test(ts_hh_weekly_diffed )
+adf.test(ts_hh_outliers_diff)
 adf.test(ts_hh_crude_diffed)
 
 # Now we construct the ECM:
 
-coint.res <- residuals(lm(ts_weekly_online_hh ~ ts_weekly_online_crude))
-coint.res <- stats::lag(ts(coint.res, start = c(1997,2), freq = 52), k = -1)
-
-# now we change the window of question we are looking at: 
-relations <- cbind(ts_hh_weekly_diffed, ts_hh_crude_diffed, ts_weekly_online_hh, ts_weekly_online_crude, coint.res)
-relations_wind <- window(relations, start = c(1997,3), end = c(2022, 10))
-colnames(relations_wind) <- c("diff.hh", "diff.crude", "hh", "crude", "coint.res1")
-
-# change in co-integrating factor
-#
-ecm.model <- diff.hh ~ coint.res1 + diff.crude 
-bp.ecm <- breakpoints(coint.res  ~ 1)
-ci.ecm <- confint(bp.ecm)
-
-# change in co-integrating vector
-# test for co-integration 
-# manually impute the 
-# run an ECM without ECM without E
-# break test of co-integaating vectors
-
-# breaks in co-integrating vectors
-# regressing y on x, co-integrating 
-# what if there has been 
-# what if there is disparate co-intgeration
-# breaking co-integrating co-efficients
-# 1992 t racing - hensen
-# google scholar 
-
-
-par(mar=c(5,4,4,5)+.1)
-plot(ts_weekly_online_crude ,  xlab="Time", ylab="Dollars per Barrel", col = "blue")
-par(new=TRUE)
-plot(ts_weekly_online_hh,  xlab="Time", ylab="Dollars per Barrel", col = "black", axes = FALSE)
-axis(4)
-mtext("USD/MMBtu", side=4, line=3)
-lines(ci.ecm)
-legend('topleft', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
-       col=c("blue", "black"), lty=1, cex=0.8)
-
-
-ocus <- efp(ecm.model, type="OLS-CUSUM", data = relations_wind)
-me <- efp(ecm.model, type="ME", data=relations_wind, h=0.2)
-ocus
-bound.ocus <- boundary(ocus, alpha=0.05)
-plot(ocus)
-plot(me, functional = NULL) 
-sctest(ocus)
-fs <- Fstats(ecm.model, data = relations_wind)
-fs
-plot(fs)
-plot(fs, aveF=TRUE)
-plot(fs, pval=TRUE)
-sctest(fs, type="expF")
-
-#enumerate all possible break dates
-
-# lets use the one without significant outliers: 
-
-hh_weekly_online_outliers 
-
-ts_hh_outliers <- ts(hh_weekly_online_outliers$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
-ts_hh_outliers_diff <- diff(ts_hh_outliers)
-
-oint.res <- residuals(lm(ts_hh_outliers ~ ts_weekly_online_crude))
+coint.res <- residuals(lm(ts_hh_outliers ~ ts_weekly_online_crude))
 coint.res <- stats::lag(ts(coint.res, start = c(1997,2), freq = 52), k = -1)
 # now we change the window of question we are looking at: 
 relations <- cbind(ts_hh_outliers_diff, ts_hh_crude_diffed, ts_hh_outliers, ts_weekly_online_crude, coint.res)
@@ -432,9 +447,79 @@ lines(ci.ecm)
 legend('topleft', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
        col=c("blue", "black"), lty=1, cex=0.8)
 
-#now can do for NBP, for european BRENT, for Japan/Korea, but not for Dutch TTF:
+
+# other statistics
+ocus <- efp(ecm.model, type="OLS-CUSUM", data = relations_wind)
+me <- efp(ecm.model, type="ME", data=relations_wind, h=0.2)
+ocus
+bound.ocus <- boundary(ocus, alpha=0.05)
+plot(ocus)
+plot(me, functional = NULL) 
+sctest(ocus)
+fs <- Fstats(ecm.model, data = relations_wind)
+fs
+plot(fs)
+plot(fs, aveF=TRUE)
+plot(fs, pval=TRUE)
+sctest(fs, type="expF")
+
+# enumerate all possible break dates
+
+# now can do for NBP, for european BRENT, for Japan/Korea, but not for Dutch TTF:
+
+# ALL DATA SETS ################################################################
+
+# hh weekly ts: ts_hh_outliers
+# WTI OK ts: ts_weekly_online_crude
+# NBP ts: NBP_ts 
+# JK ts: JK_ts 
+# TTF:  
+# European Brent:  eu_brent_ts 
+
+# let us test the stationarity of all these ts: 
+
+adf.test(ts_hh_outliers)
+adf.test(ts_weekly_online_crude)
+adf.test(NBP_ts)
+adf.test(JK_ts)
+adf.test(eu_brent_ts)
+
+# now let us first difference these:
+
+hh_ts_diff <- diff(ts_hh_outliers)
+crude_ts_diff <- diff(ts_weekly_online_crude)
+nbp_ts_diff <- diff(NBP_ts)
+jk_ts_diff <- diff(JK_ts)
+brent_ts_diff <- diff(eu_brent_ts) 
+# now let us test again -- the below are all stationary
+
+adf.test(hh_ts_diff) 
+adf.test(crude_ts_diff)  
+adf.test(nbp_ts_diff) 
+adf.test(jk_ts_diff)
+adf.test(brent_ts_diff)
+
+# now can construct an ECM for each one: 
 
 
+
+
+
+# BELOW IS REDUNDANT ###########################################################
+
+# change in co-integrating vector
+# test for co-integration 
+# manually impute the 
+# run an ECM without ECM without E
+# break test of co-integaating vectors
+
+# breaks in co-integrating vectors
+# regressing y on x, co-integrating 
+# what if there has been 
+# what if there is disparate co-intgeration
+# breaking co-integrating co-efficients
+# 1992 t racing - hensen
+# google scholar 
 
 ###############################################################################
 
