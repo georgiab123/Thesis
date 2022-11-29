@@ -16,30 +16,19 @@ library(data.table)
 
 # import price series data from local repository
 
-NBP_prices <- NBP_series
+NBP_prices <- NBP_prices
 henry_hub_series <- henry_hub
 crude_ts <- Crude_WTI_OK
 
 # DATA CLEANING  ##############################################################
 
-# for NBP prices
+# for NBP prices, we maintain the first two columns of the data set: 
 
 NBP_prices <- NBP_prices[-1, ]
-NBP_price_series <- NBP_prices[, 2]
- 
-# let us convert to time series
-# we first get the beginning and end dates
-
-date_series <- NBP_prices$Date
-last_date <- date_series[1]
-first_date <- date_series[length(date_series)]
-
-# let us create a dataframe with just the first two columns:
-
-price_date_NBP <- NBP_prices[,c(1,2)]
+price_date_NBP <-NBP_prices[,c(1,2)]
 colnames(price_date_NBP) <- c("time", "price")
 
-# now we create a continuous time series (continous in the sense of no gaps in 
+# now we create a continuous time series (continuous in the sense of no gaps in 
 # our date column, but gaps in the price series) - we add row entries for the 
 # missing days and impute them with NA values 
 
@@ -49,6 +38,7 @@ raw.data$time <- as.Date(raw.data$time)
 
 sorted.data <- raw.data
 data.length <- length(sorted.data$time)
+
 time.max <- sorted.data$time[1]
 time.min <- sorted.data$time[data.length]
 
@@ -64,15 +54,17 @@ NBP_price_df_COPY <- NBP_price_df
 
 # we can get the ts to start exactly on the 2nd month of 1997 by deleting the first
 # three rows: 
+
 NBP_price_df_COPY  <- NBP_price_df_COPY [-c(1,2,3),]
 
 # we can also get the ts to end exactly on the 10th month by deleting the very last
 # entry 
-dim(NBP_price_df_COPY)
-NBP_price_df_COPY  <-  NBP_price_df_COPY[-9405,]
+
+NBP_price_df_COPY  <-  NBP_price_df_COPY[-dim(NBP_price_df_COPY)[1],]
+
+# now convert to ts object: 
 
 ts_NBP_prices <- NBP_price_df_COPY$price
-
 term_ts_nbp <- ts(ts_NBP_prices, start=c(1997, 2), end=c(2022, 10), frequency=365)
 
 # now we plot our time series
@@ -85,6 +77,8 @@ autoplot(term_ts_nbp) + labs(x = "Time", y = "Price, USD/mmBtu") +
 
 week_nbp <- as.Date(cut(NBP_price_df$time, "week"))
 weekly_mean_nbp <- aggregate(price ~ week_nbp,  NBP_price_df, mean)
+#check for na values
+which(is.na(weekly_mean_nbp))
 
 plot_ts_nbp <- ggplot(weekly_mean_nbp, aes(x = week_nbp, y = price))  +
   geom_line(color="steelblue") 
@@ -233,7 +227,20 @@ which(is.na(crude_ts$price))
 crude_ts$time <- as.Date(crude_ts$time)
 # now we have a ts going from 1997-2 to 2022-11
 
+# lets also create a ts with severe outliers removed for the online wekly henry hub
+# and hte only crude
 
+plot(crude_ts$time, crude_ts$price, type = "l")
+which.min(crude_ts$price)
+crude_ts[1212,]
+crude_ts_outliers <- crude_ts[-1212,]
+plot(crude_ts_outliers$time, crude_ts_outliers$price, type = "l")
+
+plot(hh_weekly_online$time, hh_weekly_online $price, type = "l")
+hh_weekly_online_outliers <- hh_weekly_online
+hh_weekly_online_outliers[1254,]$price <- (hh_weekly_online_outliers[1253,]$price + hh_weekly_online_outliers[1255,]$price)/2
+hh_weekly_online_outliers[317,]$price <- (hh_weekly_online_outliers[316,]$price + hh_weekly_online_outliers[318,]$price)/2
+plot(hh_weekly_online_outliers$time,hh_weekly_online_outliers$price, type = "l")
 # BREAKPOINT PLOTTING #########################################################
 
 # We now have a weekly times series for Henry Hub data and for NBP. Let us compute
@@ -247,43 +254,44 @@ crude_ts$time <- as.Date(crude_ts$time)
 
 # We will compute the break dates for HH weekly first: 
 # we get rid of the first row since it is in the month of January
+
 hh_weekly_03 <- henry_hub_weekly_00[-1,]
+
 # we need to omit an NA value, so take the average of surround prices and impute: 
+
 which(is.na(ts_weekly_hh))
 avg_price_imput <- (hh_weekly_03[451,]$price + hh_weekly_03[453,]$price)/2
 hh_weekly_03[452,]$price <- avg_price_imput 
+
 # now w convert to ts:
 ts_weekly_hh <- ts(hh_weekly_03$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+
 # we compute breakpoints without any transformation
 bp_hh_weekly <- breakpoints(ts_weekly_hh  ~ 1, format.times = TRUE)
+
 # break points are at index 196 402 617 932 
 summary(bp_hh_weekly)
+
 # compute breakdates corresponding to the
-## breakpoints of minimum BIC segmentation
+# breakpoints of minimum BIC segmentation
 breakdates(bp_hh_weekly)
 ## confidence intervals
 ci.hh <- confint(bp_hh_weekly)
 ci.hh
+
 #below functionality shows breakpoints and CI for them: 
 plot(ts_weekly_hh,  xlab="Time", ylab="USD/ MMBtu")
 lines(ci.hh)
 
 
-# we add them using the vline function
-plot_ts <- ggplot(hh_weekly_03, aes(x = week, y = price))  +
-  geom_line(color="steelblue") + 
-  geom_vline(xintercept = as.numeric(hh_weekly_03$week[196]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(hh_weekly_03$week[402]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(hh_weekly_03$week[617]), linetype = 2) + 
-  geom_vline(xintercept = as.numeric(hh_weekly_03$week[917]), linetype = 2) + 
-  xlab("") + labs(x = "Time", y = "Price, USD/mmBtu") 
-
-#BIVARIATE BREAK TESTING ######################################################
+#BIVARIATE BREAK TESTING -- FIRST EXAMPLE ######################################
 
 # let's check HH against WTI crude: 
-# we will use the online HH for ths, since its dates match perfectly: 
+# we will use the online HH for this, since its dates match perfectly: 
+
 dim(hh_weekly_online)
 dim(crude_ts)
+
 # there is a missing value between these two dataframes, but the beginnning and 
 # end match perfectly
 # we convert to ts:
@@ -297,46 +305,85 @@ length(ts_weekly_online_crude)
 # check for NA values -- no NA values: 
 which(is.na(ts_weekly_online_hh))
 which(is.na(ts_weekly_online_crude ))
-# now we do break testing:
+
+# now we do break testing (on the online time series with outliers imputed) 
 
 
-
-bp_crude_hh <- breakpoints(ts_weekly_online_hh  ~ ts_weekly_online_crude)
+bp_crude_hh <- breakpoints(ts_hh_outliers ~ ts_weekly_online_crude)
 bp_crude_hh
 ci.crude_hh <- confint(bp_crude_hh)
 
+# now we plot with CI and breakpoints
+par(mar=c(5,4,4,5)+.1)
 plot(ts_weekly_online_crude,  xlab="Time", ylab="Price", col = "blue")
-lines(ts_weekly_online_hh, col = "black")
+par(new=TRUE)
+plot(ts_hh_outliers,  xlab="Time", ylab="Dollars per Barrel", col = "black", axes = FALSE)
+axis(4)
+mtext("USD/MMBtu", side=4, line=3)
 lines(ci.crude_hh)
 legend('topright', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
        col=c("blue", "black"), lty=1, cex=0.8)
 
+# Now, lets do break testing on an ECM model: 
 
-# first we need to take the first difference of both of these time series:
+# first, we test whether these time series are stationary: 
+
+adf.test(ts_weekly_online_hh)
+adf.test(ts_weekly_online_crude)
+
+# they are not stationary
+
+# so we need to take the first difference of both of these time series:
+
 ts_hh_weekly_diffed <- diff(ts_weekly_online_hh) 
 ts_hh_crude_diffed <- diff(ts_weekly_online_crude) 
 
-# check the below ECM is actually correct: 
+# lets check whether they are stationary now -- they are both stationary
+# and of order one! 
+
+adf.test(ts_hh_weekly_diffed )
+adf.test(ts_hh_crude_diffed)
+
+# Now we construct the ECM:
+
 coint.res <- residuals(lm(ts_weekly_online_hh ~ ts_weekly_online_crude))
 coint.res <- stats::lag(ts(coint.res, start = c(1997,2), freq = 52), k = -1)
 
 # now we change the window of question we are looking at: 
 relations <- cbind(ts_hh_weekly_diffed, ts_hh_crude_diffed, ts_weekly_online_hh, ts_weekly_online_crude, coint.res)
-relations_wind <- window(relations, start = c(1997,3), end = c(2022,10))
+relations_wind <- window(relations, start = c(1997,3), end = c(2022, 10))
 colnames(relations_wind) <- c("diff.hh", "diff.crude", "hh", "crude", "coint.res1")
 
-
+# change in co-integrating factor
+#
 ecm.model <- diff.hh ~ coint.res1 + diff.crude 
-bp.ecm <- breakpoints(diff.hh ~ coint.res1 + diff.crude, data = relations_wind )
+bp.ecm <- breakpoints(coint.res  ~ 1)
 ci.ecm <- confint(bp.ecm)
 
-# it should be first differencing really
-plot(ts_hh_crude_diffed ,  xlab="Time", ylab="Price", col = "blue")
-lines(ts_hh_weekly_diffed, col = "black")
+# change in co-integrating vector
+# test for co-integration 
+# manually impute the 
+# run an ECM without ECM without E
+# break test of co-integaating vectors
+
+# breaks in co-integrating vectors
+# regressing y on x, co-integrating 
+# what if there has been 
+# what if there is disparate co-intgeration
+# breaking co-integrating co-efficients
+# 1992 t racing - hensen
+# google scholar 
+
+
+par(mar=c(5,4,4,5)+.1)
+plot(ts_weekly_online_crude ,  xlab="Time", ylab="Dollars per Barrel", col = "blue")
+par(new=TRUE)
+plot(ts_weekly_online_hh,  xlab="Time", ylab="Dollars per Barrel", col = "black", axes = FALSE)
+axis(4)
+mtext("USD/MMBtu", side=4, line=3)
 lines(ci.ecm)
 legend('topleft', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
        col=c("blue", "black"), lty=1, cex=0.8)
-
 
 
 ocus <- efp(ecm.model, type="OLS-CUSUM", data = relations_wind)
@@ -352,6 +399,42 @@ plot(fs)
 plot(fs, aveF=TRUE)
 plot(fs, pval=TRUE)
 sctest(fs, type="expF")
+
+#enumerate all possible break dates
+
+# lets use the one without significant outliers: 
+
+hh_weekly_online_outliers 
+
+ts_hh_outliers <- ts(hh_weekly_online_outliers$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+ts_hh_outliers_diff <- diff(ts_hh_outliers)
+
+oint.res <- residuals(lm(ts_hh_outliers ~ ts_weekly_online_crude))
+coint.res <- stats::lag(ts(coint.res, start = c(1997,2), freq = 52), k = -1)
+# now we change the window of question we are looking at: 
+relations <- cbind(ts_hh_outliers_diff, ts_hh_crude_diffed, ts_hh_outliers, ts_weekly_online_crude, coint.res)
+relations_wind <- window(relations, start = c(1997,3), end = c(2022,10))
+colnames(relations_wind) <- c("diff.hh", "diff.crude", "hh", "crude", "coint.res1")
+
+
+ecm.model <- diff.hh ~ coint.res1 + diff.crude 
+bp.ecm <- breakpoints(diff.hh ~ coint.res1 + diff.crude, data = relations_wind)
+ci.ecm <- confint(bp.ecm)
+
+# it should be first differencing really
+par(mar=c(5,4,4,5)+.1)
+plot(ts_weekly_online_crude ,  xlab="Time", ylab="Dollars per Barrel", col = "blue")
+par(new=TRUE)
+plot(ts_hh_outliers, xlab="Time", ylab="Dollars per Barrel", col = "black", axes = FALSE)
+axis(4)
+mtext("USD/MMBtu", side=4, line=3)
+lines(ci.ecm)
+legend('topleft', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
+       col=c("blue", "black"), lty=1, cex=0.8)
+
+#now can do for NBP, for european BRENT, for Japan/Korea, but not for Dutch TTF:
+
+
 
 ###############################################################################
 
