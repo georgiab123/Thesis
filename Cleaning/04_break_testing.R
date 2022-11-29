@@ -21,6 +21,7 @@ henry_hub_series <- henry_hub
 crude_ts <- Crude_WTI_OK
 japan_korea <- collated_prices
 eu_brent <- EU_BRENT
+ttf_ts <- TTF_DUTCH_ALL
 
 # DATA CLEANING  ##############################################################
 
@@ -233,6 +234,8 @@ hh_weekly_online_outliers[317,]$price <- (hh_weekly_online_outliers[316,]$price 
 plot(hh_weekly_online_outliers$time,hh_weekly_online_outliers$price, type = "l")
 
 
+ts_hh_outliers <- ts(hh_weekly_online_outliers$price, start=c(1997, 06), end=c(2022, 50), frequency=52)
+plot(ts_hh_outliers)
 # CRUDE_WTI  ##################################################################
 
 colnames(crude_ts) <- c("time", "price")
@@ -255,7 +258,12 @@ crude_ts[1212,]
 crude_ts_outliers <- crude_ts[-1212,]
 plot(crude_ts_outliers$time, crude_ts_outliers$price, type = "l")
 
-# JAPAN_KOREA  #################################################################
+ts_weekly_online_crude <- ts(crude_ts_outliers$price, start=c(1997, 06), end=c(2022, 50), frequency=52)
+plot(ts_weekly_online_crude)
+ts_crude_final <- ts_weekly_online_crude 
+
+
+l# JAPAN_KOREA  #################################################################
 
 japan_korea <- japan_korea[-1,]
 japan_korea <- japan_korea[,c(1,2)]
@@ -291,14 +299,18 @@ weekly_IMPUTED_JK[16,]$price <- (weekly_IMPUTED_JK[15,]$price + weekly_IMPUTED_J
 
 #now we plot again and see if discontunuity is removed:
 
-plot(weekly_IMPUTED_JK[,1], weekly_IMPUTED_JK$price, type = "l")
+plot(jk_wk[,1], jk_wk$price, type = "l")
 
 # now we create a ts
 # remove first row so we start exactly in the 10th month of 2012
-
+# we will look at 2014 onwards
 weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK
 weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK_REMOVED[-1,]
-JK_ts <- ts(weekly_IMPUTED_JK_REMOVED$price, start = c(2012, 10), end = c(2022, 10), frequency = 52)
+jk_wk <- weekly_IMPUTED_JK_REMOVED
+jk_wk <- jk_wk[-c(1:16),]
+
+JK_ts <- ts(jk_wk $price, start = c(2014, 32), end = c(2022, 46), frequency = 52)
+plot(JK_ts)
 
 # EUROPEAN BRENT ##############################################################
 
@@ -312,8 +324,48 @@ eu_brent_sub <- eu_brent[-c(1:508),]
 plot(eu_brent_sub$time, eu_brent_sub$price, type = "l")
 #nothing too severe, convert to ts:
 
-eu_brent_ts <- ts(eu_brent_sub$price, start = c(1997,02), end = c(2022, 11), frequency =52)
+eu_brent_ts <- ts(eu_brent_sub$price, start = c(1997,02), end = c(2022, 47), frequency =52)
+plot(eu_brent_ts)
 
+# DUTCH TTF ####################################################################
+
+# remove multiple first rows as they are just NA values:
+
+ttf_ts <- ttf_ts[-c(1:17),]
+# keep only first two rows:
+ttf_ts <- ttf_ts[, c(1,2)]
+colnames(ttf_ts) <- c("time", "price")
+
+# now impute all daily values: 
+raw.data <- ttf_ts
+raw.data$time <- anydate(raw.data$time)
+raw.data$time <- as.Date(raw.data$time)
+sorted.data <- raw.data
+data.length <- length(sorted.data$time)
+time.max <- sorted.data$time[1]
+time.min <- sorted.data$time[data.length]
+all.dates <- seq(time.min, time.max, by="day")
+all.dates.frame <- data.frame(list(time=all.dates))
+merged.data <- merge(all.dates.frame, sorted.data, all=T)
+ttf_ts_df <- merged.data
+
+# all these prices are in USD/Megawatt hour [MWh]
+# we convert to mibblion BTu by dividing by 3.412141
+ttf_ts_df$price <- (ttf_ts_df$price)/3.412141633
+
+week <- as.Date(cut(ttf_ts_df$time, "week"))
+weekly_mean_ttf <- aggregate(price ~ week,  ttf_ts_df , mean)
+which(is.na(weekly_mean_ttf))
+
+plot(weekly_mean_ttf[,1], weekly_mean_ttf$price, type = "l")
+
+# now convert to a time series object
+# remove first tow so starts exactly in 2010 - 01
+weekly_mean_ttf <- weekly_mean_ttf[-1,]
+ttf_dutch_ts <- ts(weekly_mean_ttf$price, start = c(2010, 1), end = c(2022, 46), frequency = 52)
+plot(ttf_dutch_ts)
+
+# now we plot 
 
 # BREAKPOINT PLOTTING ##########################################################
 
@@ -470,11 +522,12 @@ sctest(fs, type="expF")
 # ALL DATA SETS ################################################################
 
 # hh weekly ts: ts_hh_outliers
-# WTI OK ts: ts_weekly_online_crude
+# WTI OK ts: ts_crude_final
 # NBP ts: NBP_ts 
 # JK ts: JK_ts 
-# TTF:  
+# TTF:  ttf_dutch_ts
 # European Brent:  eu_brent_ts 
+# coal prices
 
 # let us test the stationarity of all these ts: 
 
@@ -483,6 +536,7 @@ adf.test(ts_weekly_online_crude)
 adf.test(NBP_ts)
 adf.test(JK_ts)
 adf.test(eu_brent_ts)
+adf.test(ttf_dutch_ts, k = 0)
 
 # now let us first difference these:
 
@@ -491,6 +545,7 @@ crude_ts_diff <- diff(ts_weekly_online_crude)
 nbp_ts_diff <- diff(NBP_ts)
 jk_ts_diff <- diff(JK_ts)
 brent_ts_diff <- diff(eu_brent_ts) 
+ttf_ts_diff <- diff(ttf_dutch_ts)
 # now let us test again -- the below are all stationary
 
 adf.test(hh_ts_diff) 
@@ -498,6 +553,7 @@ adf.test(crude_ts_diff)
 adf.test(nbp_ts_diff) 
 adf.test(jk_ts_diff)
 adf.test(brent_ts_diff)
+adf.test(ttf_ts_diff)
 
 # now can construct an ECM for each one: 
 
