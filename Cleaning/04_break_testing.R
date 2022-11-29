@@ -324,7 +324,7 @@ eu_brent_sub <- eu_brent[-c(1:508),]
 plot(eu_brent_sub$time, eu_brent_sub$price, type = "l")
 #nothing too severe, convert to ts:
 
-eu_brent_ts <- ts(eu_brent_sub$price, start = c(1997,02), end = c(2022, 47), frequency =52)
+eu_brent_ts <- ts(eu_brent_sub$price, start = c(1997,05), end = c(2022, 50), frequency =52)
 plot(eu_brent_ts)
 
 # DUTCH TTF ####################################################################
@@ -418,28 +418,21 @@ lines(ci.hh)
 dim(hh_weekly_online)
 dim(crude_ts)
 
-# there is a missing value between these two dataframes, but the beginnning and 
-# end match perfectly
-# we convert to ts:
-
-ts_weekly_online_hh <- ts(hh_weekly_online$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
-ts_weekly_online_crude <- ts(crude_ts$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
-
 # now that we have converted to ts, they have the same length. 
 length(ts_weekly_online_hh)
 length(ts_weekly_online_crude)
+
 # check for NA values -- no NA values: 
 
 which(is.na(ts_weekly_online_hh))
-which(is.na(ts_weekly_online_crude ))
+which(is.na(ts_weekly_online_crude))
 
 # now we do break testing (on the online time series with outliers imputed) 
 # from df hh_weekly_online_outliers 
 
-ts_hh_outliers <- ts(hh_weekly_online_outliers$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
-ts_hh_outliers_diff <- diff(ts_hh_outliers)
+ts_crude_final
 
-bp_crude_hh <- breakpoints(ts_hh_outliers ~ ts_weekly_online_crude)
+bp_crude_hh <- breakpoints(ts_hh_outliers ~ ts_crude_final)
 bp_crude_hh
 ci.crude_hh <- confint(bp_crude_hh)
 
@@ -458,15 +451,16 @@ legend('topright', legend=c("Crude, WTI: Dollars per Barrel", "Henry Hub: USD/MM
 
 # first, we test whether these time series are stationary: 
 
+
 adf.test(ts_hh_outliers)
-adf.test(ts_weekly_online_crude)
+adf.test(ts_crude_final)
 
 # they are not stationary
 
 # so we need to take the first difference of both of these time series:
 
 ts_hh_outliers_diff <- diff(ts_hh_outliers)
-ts_hh_crude_diffed <- diff(ts_weekly_online_crude) 
+ts_hh_crude_diffed <- diff(ts_crude_final) 
 
 # lets check whether they are stationary now -- they are both stationary
 # and of order one! 
@@ -476,17 +470,18 @@ adf.test(ts_hh_crude_diffed)
 
 # Now we construct the ECM:
 
-coint.res <- residuals(lm(ts_hh_outliers ~ ts_weekly_online_crude))
-coint.res <- stats::lag(ts(coint.res, start = c(1997,2), freq = 52), k = -1)
+coint.res_1 <- residuals(lm(ts_hh_outliers ~ ts_crude_final))
+coint.res <- stats::lag(ts(coint.res_1, start = c(1997,06), freq = 52), k = -1)
 # now we change the window of question we are looking at: 
-relations <- cbind(ts_hh_outliers_diff, ts_hh_crude_diffed, ts_hh_outliers, ts_weekly_online_crude, coint.res)
-relations_wind <- window(relations, start = c(1997,3), end = c(2022,10))
+relations <- cbind(ts_hh_outliers_diff, ts_hh_crude_diffed, ts_hh_outliers, ts_crude_final, coint.res)
+relations_wind <- window(relations, start = c(1997,07), end = c(2022, 50))
 colnames(relations_wind) <- c("diff.hh", "diff.crude", "hh", "crude", "coint.res1")
-
 
 ecm.model <- diff.hh ~ coint.res1 + diff.crude 
 bp.ecm <- breakpoints(diff.hh ~ coint.res1 + diff.crude, data = relations_wind)
+bp2 <-  breakpoints(ts(coint.res_1, start = c(1997,07), freq = 52) ~ 1)
 ci.ecm <- confint(bp.ecm)
+ci2 <- confint(bp2)
 
 # it should be first differencing really
 par(mar=c(5,4,4,5)+.1)
@@ -526,17 +521,17 @@ sctest(fs, type="expF")
 # NBP ts: NBP_ts 
 # JK ts: JK_ts 
 # TTF:  ttf_dutch_ts
-# European Brent:  eu_brent_ts 
+# European Brent: eu_brent_ts 
 # coal prices
 
 # let us test the stationarity of all these ts: 
 
 adf.test(ts_hh_outliers)
-adf.test(ts_weekly_online_crude)
+adf.test(ts_crude_final) 
 adf.test(NBP_ts)
 adf.test(JK_ts)
 adf.test(eu_brent_ts)
-adf.test(ttf_dutch_ts, k = 0)
+adf.test(ttf_dutch_ts)
 
 # now let us first difference these:
 
@@ -546,6 +541,7 @@ nbp_ts_diff <- diff(NBP_ts)
 jk_ts_diff <- diff(JK_ts)
 brent_ts_diff <- diff(eu_brent_ts) 
 ttf_ts_diff <- diff(ttf_dutch_ts)
+
 # now let us test again -- the below are all stationary
 
 adf.test(hh_ts_diff) 
@@ -555,9 +551,45 @@ adf.test(jk_ts_diff)
 adf.test(brent_ts_diff)
 adf.test(ttf_ts_diff)
 
+# test for co-integration:
+jotest=ca.jo(data.frame(ts_hh_outliers,ts_weekly_online_crude) , type="trace", K=2, ecdet="none", spec="longrun")
+summary(jotest)
+
+
 # now can construct an ECM for each one: 
 
+# eu brent and hh weekly:
+length(eu_brent_ts)
+length(ts_hh_outliers)
 
+# start eu_brent_ts one month later:
+eu_brent_ts_1 <- window(eu_brent_ts, start = c(1997, 6))
+brent_ts_diff_1 <- diff(eu_brent_ts_1) 
+
+# now we can conduct an ecm on our series!
+
+coint.res_1 <- residuals(lm(ts_hh_outliers ~ eu_brent_ts_1))
+coint.res <- stats::lag(ts(coint.res_1, start = c(1997,06), freq = 52), k = -1)
+# now we change the window of question we are looking at: 
+relations <- cbind(ts_hh_outliers_diff, brent_ts_diff_1, ts_hh_outliers, eu_brent_ts_1, coint.res)
+relations_wind <- window(relations, start = c(1997,07), end = c(2022, 50))
+colnames(relations_wind) <- c("diff.hh", "diff.brent", "hh", "crude", "coint.res1")
+
+# estimate breakpoints in long run equilibrium equation
+ecm.model <- diff.hh ~ coint.res1 + diff.brent
+bp.ecm <- breakpoints(ts_hh_outliers ~ eu_brent_ts_1 + 1)
+ci.ecm <- confint(bp.ecm)
+
+# it should be first differencing really
+par(mar=c(5,4,4,5)+.1)
+plot(eu_brent_ts_1 ,  xlab="Time", ylab="Dollars per Barrel", col = "blue")
+par(new=TRUE)
+plot(ts_hh_outliers, xlab="Time", ylab="Dollars per Barrel", col = "black", axes = FALSE)
+axis(4)
+mtext("USD/MMBtu", side=4, line=3)
+lines(ci.ecm)
+legend('topleft', legend=c("Eu Brent: Dollars per Barrel", "Henry Hub: USD/MMBtu"),
+       col=c("blue", "black"), lty=1, cex=0.8)
 
 
 
