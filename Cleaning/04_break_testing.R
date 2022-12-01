@@ -284,11 +284,13 @@ japan_korea_df <- merged.data
 
 # now we convert to weekly format:
 week <- as.Date(cut(japan_korea_df$time, "week"))
-weekly_mean_JK <- aggregate(price ~ week,  japan_korea_df, mean)
+weekly_mean_JK <- aggregate(price ~ week,  japan_korea_df, mean, na.rm=TRUE)
 which(is.na(weekly_mean_JK))
 
-plot(japan_korea$time, japan_korea$price, type = "l")
-plot(weekly_mean_JK[,1], weekly_mean_JK$price, type = "l")
+par(mar=c(5,4,4,5)+.1)
+plot(weekly_mean_JK[,1], weekly_mean_JK$price, type = "l", col = "blue")
+par(new = TRUE)
+plot(japan_korea$time, japan_korea$price, type = "l", axes = FALSE, col = "red") 
 
 # from the plot, we have significant discontunity from around 2015 onwards.
 # we will impte these prices using a mean of the surrounding prices:
@@ -297,20 +299,34 @@ weekly_IMPUTED_JK <- weekly_mean_JK
 weekly_IMPUTED_JK[15,]$price <- (weekly_IMPUTED_JK[14,]$price + weekly_IMPUTED_JK[17,]$price)/2
 weekly_IMPUTED_JK[16,]$price <- (weekly_IMPUTED_JK[15,]$price + weekly_IMPUTED_JK[17,]$price)/2
 
-#now we plot again and see if discontunuity is removed:
-
-plot(jk_wk[,1], jk_wk$price, type = "l")
-
-# now we create a ts
 # remove first row so we start exactly in the 10th month of 2012
 # we will look at 2014 onwards
+
 weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK
 weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK_REMOVED[-1,]
 jk_wk <- weekly_IMPUTED_JK_REMOVED
 jk_wk <- jk_wk[-c(1:16),]
 
-JK_ts <- ts(jk_wk $price, start = c(2014, 32), end = c(2022, 46), frequency = 52)
+#now we plot again and see if discontunuity is removed:
+
+plot(jk_wk[,1], jk_wk$price, type = "l")
+
+# create a ts: 
+
+JK_ts <- ts(jk_wk$price, start = c(2014, 32), frequency = 52)
 plot(JK_ts)
+
+# we now plot all:
+par(mar=c(5,4,4,5)+.1)
+plot(weekly_mean_JK[,1][-c(1:16)], weekly_mean_JK$price[-c(1:16)], type = "l", col = "blue")
+par(new = TRUE)
+#plot(japan_korea$time[-c(1:16)], japan_korea$price[-c(1:16)], type = "l", axes = FALSE) 
+#par(new = TRUE)
+plot(jk_wk[,1][-c(1:16)], jk_wk$price[-c(1:16)], type = "l", col = "red", axes = FALSE)
+par(new = TRUE)
+plot(JK_ts, col = "green", axes = FALSE)
+ 
+
 
 # EUROPEAN BRENT ##############################################################
 
@@ -524,6 +540,69 @@ sctest(fs, type="expF")
 # European Brent: eu_brent_ts 
 # coal prices
 
+# let us plot all these ts:
+
+# it should be first differencing really
+
+ts_all_prices <- cbind(ts_hh_outliers, ts_crude_final, NBP_ts, JK_ts, ttf_dutch_ts, eu_brent_ts)
+colnames(ts_all_prices) <- c("Henry Hub", "WTI crude", "NBP", "Platts JK", "TTF", "EU Brent")
+autoplot(ts_all_prices ) + labs(x = "Time", y = "Price (USD/MMBtu and Dollars Per Barrel)") + 
+  labs(color="Benchmark") + theme_bw() #+# scale_y_continuous(labels=scales::comma) +
+ # theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
+plot(ts_hh_outliers, col = "red", ylab = "USD/MMBtu") 
+par(new = TRUE)
+plot( ts_crude_final, col = "magenta", axes = FALSE, ylab = "")
+axis(4)
+mtext("Dollars per Barrel", side=4, line=3)
+par(new = TRUE)
+plot(  NBP_ts, col = "black", axes = FALSE,  ylab = "")
+par(new = TRUE) 
+plot( JK_ts, col = "blue", axes = FALSE,  ylab = "")
+par(new = TRUE)
+plot( ttf_dutch_ts, col = "purple", axes = FALSE,  ylab = "")
+par(new = TRUE)
+plot( eu_brent_ts, col = "orange", axes = FALSE,  ylab = "")
+legend('topleft', legend=c("Henry Hub", "WTI crude", "NBP", "Platts JK", "TTF", "EU Brent"),
+       col=c("red", "magenta", "black", "blue", "purple", "orange"), lty=1, cex=0.8)
+
+# lets get summary statistics:
+
+round(mean(ts_hh_outliers),2)
+round(mean(ts_crude_final),2)
+round(mean(NBP_ts),2) 
+round(mean(JK_ts),2)
+round(mean(eu_brent_ts),2)
+round(mean(ttf_dutch_ts),2)
+
+round(min(ts_hh_outliers),2)
+round(min(ts_crude_final),2)
+round(min(NBP_ts),2) 
+round(min(JK_ts),2)
+round(min(eu_brent_ts),2)
+round(min(ttf_dutch_ts),2)
+
+round(max(ts_hh_outliers),2)
+round(max(ts_crude_final),2)
+round(max(NBP_ts),2) 
+round(max(JK_ts),2)
+round(max(eu_brent_ts),2)
+round(max(ttf_dutch_ts),2)
+
+round(sd(ts_hh_outliers),2)
+round(sd(ts_crude_final),2)
+round(sd(NBP_ts),2) 
+round(sd(JK_ts),2)
+round(sd(eu_brent_ts),2)
+round(sd(ttf_dutch_ts),2)
+
+length(ts_hh_outliers)
+length(ts_crude_final) 
+length(NBP_ts)
+length(JK_ts)
+length(eu_brent_ts)
+length(ttf_dutch_ts)
+
+
 # let us test the stationarity of all these ts: 
 
 adf.test(ts_hh_outliers)
@@ -554,7 +633,6 @@ adf.test(ttf_ts_diff)
 # test for co-integration:
 jotest=ca.jo(data.frame(ts_hh_outliers,ts_weekly_online_crude) , type="trace", K=2, ecdet="none", spec="longrun")
 summary(jotest)
-
 
 # now can construct an ECM for each one: 
 
