@@ -23,6 +23,15 @@ japan_korea <- collated_prices
 eu_brent <- EU_BRENT
 ttf_ts <- TTF_DUTCH_ALL
 
+eu_brent_daily <- 
+eu_brent_monthly <- 
+  
+crude_ts_daily <- 
+crude_ts_monthly <- 
+  
+henry_hub_daily <- 
+henry_hub_monthly <-
+
 # DATA CLEANING  ##############################################################
 
 # for NBP prices, we maintain the first two columns of the data set: 
@@ -58,7 +67,7 @@ NBP_price_df_COPY <- NBP_price_df
 # we can get the ts to start exactly on the 2nd month of 1997 by deleting the first
 # three rows: 
 
-NBP_price_df_COPY  <- NBP_price_df_COPY [-c(1,2,3),]
+NBP_price_df_COPY  <- NBP_price_df_COPY[-c(1,2,3),]
 
 # we can also get the ts to end exactly on the 10th month by deleting the very last
 # entry 
@@ -80,6 +89,7 @@ autoplot(term_ts_nbp) + labs(x = "Time", y = "Price, USD/mmBtu") +
 
 week_nbp <- as.Date(cut(NBP_price_df$time, "week"))
 weekly_mean_nbp <- aggregate(price ~ week_nbp,  NBP_price_df, mean)
+
 #check for na values
 which(is.na(weekly_mean_nbp))
 
@@ -93,7 +103,54 @@ plot_ts_nbp
 weekly_mean_nbp
 # want to start on 1997-02-03
 weekly_mean_nbp <- weekly_mean_nbp[-1,]
-NBP_ts <- ts(weekly_mean_nbp$price, start = c(1997,02), end = c(2022,10), frequency = 52)
+NBP_ts <- ts(weekly_mean_nbp$price, start = c(1997,02), frequency = 52)
+plot(weekly_mean_nbp[,1], weekly_mean_nbp$price, type = "l")
+
+
+# look at daily and monthly ts:
+plot(NBP_price_df_COPY[,1], NBP_price_df_COPY[,2], type = "l") 
+which(is.na(NBP_price_df_COPY))
+# there are many NA values! again, we compute them: 
+
+
+nbp_daily_ts <- NBP_price_df_COPY
+# impute first value since it NA 
+rownames(nbp_daily_ts ) <- NULL
+nbp_daily_ts$price[1] <- nbp_daily_ts$price[2]
+length(na_values_NBP)
+nbp_ts_og <- ts(nbp_daily_ts$price, start = c(1997, 32 ), frequency = 365)
+nbp_ts_transform <- nbp_ts_og
+
+na_values_NBP <- which(is.na(nbp_ts_transform))
+
+for(i in na_values_NBP){
+  # the below will only work if either surrounding entry is not NA 
+  nbp_ts_transform[i] <-(nbp_ts_transform[i-1] + nbp_ts_transform[i+1])/2
+  if(is.na(nbp_ts_transform[i+1])){
+    nbp_ts_transform[i] <- nbp_ts_transform[i-1] 
+  }
+}
+
+# show difference between the two now: 
+par(mfrow = c(2,1),  mai = c(0.5, 0.5, 0.4, 0.4))
+plot(nbp_ts_transform, col = "red", ylab = "USD/MMBtu")
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily NBP - imputed"),
+       col=c("red"), lty=1, cex=1.2)
+plot(nbp_ts_og, col = "black",  ylab = "USD/MMBtu" )
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily NBP"),
+       col=c("black"), lty=1, cex=1.2)
+
+# lets get the monthly as well: 
+month_nbp <- as.Date(cut(NBP_price_df_COPY$time, "month"))
+month_mean_nbp <- aggregate(price ~ month_nbp,  NBP_price_df_COPY, mean)
+ts_month_nbp <- ts(month_mean_nbp$price, start = c(1997, 02), frequency = 12)
+plot(ts_month_nbp)
 
 # HENRY HUB ####################################################################
 
@@ -263,7 +320,7 @@ plot(ts_weekly_online_crude)
 ts_crude_final <- ts_weekly_online_crude 
 
 
-l# JAPAN_KOREA  #################################################################
+l# JKM   #################################################################
 
 japan_korea <- japan_korea[-1,]
 japan_korea <- japan_korea[,c(1,2)]
@@ -282,9 +339,78 @@ all.dates.frame <- data.frame(list(time=all.dates))
 merged.data <- merge(all.dates.frame, sorted.data, all=T)
 japan_korea_df <- merged.data
 
+# now create a daily ts for JKM, where row 676 is date 2014-08-01:
+jkm_daily_ts <- ts(japan_korea_df$price[-c(1:675)], start = c(2014,213), frequency = 365) 
+plot(jkm_daily_ts)
+# there are so many na values:
+na_values_missing <- which(is.na(jkm_daily_ts))
+# create a copy
+imputed_JKM_daily <- jkm_daily_ts
+# we will impute the first value as 11:
+imputed_JKM_daily[1] <- 11
+na_values_missing_1 <- which(is.na(imputed_JKM_daily))
+
+for(i in na_values_missing_1){
+  # the below will only work if either surrounding entry is not NA 
+  imputed_JKM_daily[i] <-  (imputed_JKM_daily[i-1] + imputed_JKM_daily[i+1])/2
+  if(is.na(imputed_JKM_daily[i+1])){
+    imputed_JKM_daily[i] <- imputed_JKM_daily[i-1] 
+  }
+}
+
+
+# we can run this again! 
+
+plot(imputed_JKM_daily)
+daily_JKM_ts <- ts(imputed_JKM_daily, start = c(2014, 213), frequency = 365) 
+plot(daily_JKM_ts)
+
+# lets compare this imputed to un-imputed data:
+par(mfrow = c(2,1),  mai = c(0.5, 0.5, 0.4, 0.4))
+plot(daily_JKM_ts, col = "red", ylab = "USD/MMBtu")
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily JKM - imputed"),
+       col=c("red"), lty=1, cex=1.2)
+plot(jkm_daily_ts, col = "black",  ylab = "USD/MMBtu" )
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily JKM"),
+       col=c("black"), lty=1, cex=1.2)
+
+length(which(is.na(jkm_daily_ts)))
+
 # now we convert to weekly format:
 week <- as.Date(cut(japan_korea_df$time, "week"))
 weekly_mean_JK <- aggregate(price ~ week,  japan_korea_df, mean, na.rm=TRUE)
+which(is.na(weekly_mean_JK))
+
+# now we convert to monthly:
+month <- as.Date(cut(japan_korea_df$time, "month"))
+monthly_mean_JK <- aggregate(price ~ month,  japan_korea_df, mean, na.rm=TRUE)
+# convert to ts:
+monthly_ts_jkm <- ts(monthly_mean_JK[-c(1:8),]$price, start = c(2014, 08), frequency = 12 )
+plot(monthly_ts_jkm)
+
+# let us plot all daily, weekly and monthly ts: 
+
+#dev.off()
+plot(daily_JKM_ts, ylab = "USD/MMBtu", xlab = "Time", ylim = c(0,70))
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") # Grid line color)      # Grid line width
+par(new=TRUE)
+plot(JK_ts, col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim = c(0,70))
+par(new=TRUE)
+plot(monthly_ts_jkm, col = "red", axes= FALSE, ylab = "", xlab = "", ylim = c(0,70))
+legend('topleft', legend=c("Daily JKM - imputed ", "Weekly JKM", "Monthly JKM"),
+       col=c("black", "blue", "red"), lty=1:2, cex=1.2)
+
+
+
+# now examining the weekly time series. 
 which(is.na(weekly_mean_JK))
 
 par(mar=c(5,4,4,5)+.1)
@@ -293,14 +419,18 @@ par(new = TRUE)
 plot(japan_korea$time, japan_korea$price, type = "l", axes = FALSE, col = "red") 
 
 # from the plot, we have significant discontunity from around 2015 onwards.
-# we will impte these prices using a mean of the surrounding prices:
+# we can impute some of these these prices using a mean of the surrounding prices:
+#  2013-04-29  0.000000
+#  2013-05-06  0.000000
 
+# we do not end up using this below --> no imputation for JKM 
 weekly_IMPUTED_JK <- weekly_mean_JK
 weekly_IMPUTED_JK[15,]$price <- (weekly_IMPUTED_JK[14,]$price + weekly_IMPUTED_JK[17,]$price)/2
 weekly_IMPUTED_JK[16,]$price <- (weekly_IMPUTED_JK[15,]$price + weekly_IMPUTED_JK[17,]$price)/2
 
 # remove first row so we start exactly in the 10th month of 2012
-# we will look at 2014 onwards
+
+# we will look at 2014 onwards - exactly at 2014-08-04
 
 weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK
 weekly_IMPUTED_JK_REMOVED <- weekly_IMPUTED_JK_REMOVED[-1,]
@@ -311,9 +441,9 @@ jk_wk <- jk_wk[-c(1:16),]
 
 plot(jk_wk[,1], jk_wk$price, type = "l")
 
-# create a ts: 
+# create a ts (starting 2014-08-04)
 
-JK_ts <- ts(jk_wk$price, start = c(2014, 32), frequency = 52)
+JK_ts <- ts(jk_wk$price, start = c(2014, 32), end = c(2022, 44),  frequency = 52)
 plot(JK_ts)
 
 # we now plot all:
@@ -322,12 +452,13 @@ plot(weekly_mean_JK[,1][-c(1:16)], weekly_mean_JK$price[-c(1:16)], type = "l", c
 par(new = TRUE)
 #plot(japan_korea$time[-c(1:16)], japan_korea$price[-c(1:16)], type = "l", axes = FALSE) 
 #par(new = TRUE)
-plot(jk_wk[,1][-c(1:16)], jk_wk$price[-c(1:16)], type = "l", col = "red", axes = FALSE)
+plot(jk_wk[,1][-c(1:16)], jk_wk$price[-c(1:16)], type = "l", col = "red")
 par(new = TRUE)
-plot(JK_ts, col = "green", axes = FALSE)
+plot(JK_ts, col = "green")
+
+
+# let us plot all daily, weekly and monthly ts: 
  
-
-
 # EUROPEAN BRENT ##############################################################
 
 eu_brent <- eu_brent[-c(1,2),]
@@ -369,6 +500,45 @@ ttf_ts_df <- merged.data
 # we convert to mibblion BTu by dividing by 3.412141
 ttf_ts_df$price <- (ttf_ts_df$price)/3.412141633
 
+
+plot(ttf_ts_df[,1], ttf_ts_df[,2], type = "l")
+which(is.na(ttf_ts_df))
+
+# convert to ts:
+ttf_daily <- ts(ttf_ts_df[,2], start = c(2010, 03), frequency = 365)
+ttf_daily_og <- ttf_daily 
+plot(ttf_daily)
+na_values_TTF <- which(is.na(ttf_daily))
+length(na_values_TTF)
+for(i in na_values_TTF){
+  # the below will only work if either surrounding entry is not NA 
+  ttf_daily[i] <-  (ttf_daily[i-1] + ttf_daily[i+1])/2
+  if(is.na(ttf_daily[i+1])){
+    ttf_daily[i] <- ttf_daily[i-1] 
+  }
+}
+
+# create a comparision plot
+par(mfrow = c(2,1),  mai = c(0.5, 0.5, 0.4, 0.4))
+plot(ttf_daily_og, col = "red", ylab = "USD/MMBtu")
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily TTF"),
+       col=c("red"), lty=1, cex=1.2)
+plot(ttf_daily, col = "black",  ylab = "USD/MMBtu" )
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily TTF - imputed"),
+       col=c("black"), lty=1, cex=1.2)
+
+# we also get the monthly: 
+
+month <- as.Date(cut(ttf_ts_df$time, "month"))
+month_mean_ttf <- aggregate(price ~ month,  ttf_ts_df, mean)
+ts_month_ttf <- ts(month_mean_ttf$price, start = c(2010,1), frequency = 12) 
+
 week <- as.Date(cut(ttf_ts_df$time, "week"))
 weekly_mean_ttf <- aggregate(price ~ week,  ttf_ts_df , mean)
 which(is.na(weekly_mean_ttf))
@@ -380,6 +550,36 @@ plot(weekly_mean_ttf[,1], weekly_mean_ttf$price, type = "l")
 weekly_mean_ttf <- weekly_mean_ttf[-1,]
 ttf_dutch_ts <- ts(weekly_mean_ttf$price, start = c(2010, 1), end = c(2022, 46), frequency = 52)
 plot(ttf_dutch_ts)
+
+
+# lets plot all of these:
+
+dev.off()
+plot(ttf_daily, ylab = "USD/MMBtu", xlab = "Time", ylim=c(0,100))
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+    col = "gray") # Grid line color)      # Grid line width
+par(new=TRUE)
+plot(ttf_dutch_ts , col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim=c(0,100))
+par(new=TRUE)
+plot(ts_month_ttf, col = "red",  ylab = "", xlab = "", axes = FALSE, ylim=c(0,100))
+legend('topleft', legend=c("Daily TTF - imputed ", "Weekly TTF", "Monthly TTF"),
+       col=c("black", "blue", "red"), lty=1:2, cex=1.2)
+
+plot(ttf_daily, ylab = "USD/MMBtu", xlab = "Time")
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") # Grid line color)      # Grid line width
+par(new=TRUE)
+plot(ttf_dutch_ts , col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "")
+par(new=TRUE)
+plot(ts_month_ttf, col = "red",  ylab = "", xlab = "", axes = FALSE)
+legend('topleft', legend=c("Daily TTF - imputed ", "Weekly TTF", "Monthly TTF"),
+       col=c("black", "blue", "red"), lty=1:2, cex=1.2)
+
+
+
+
 
 # now we plot 
 
@@ -535,7 +735,8 @@ sctest(fs, type="expF")
 # hh weekly ts: ts_hh_outliers
 # WTI OK ts: ts_crude_final
 # NBP ts: NBP_ts 
-# JK ts: JK_ts 
+# JK ts weekly: JK_ts 
+# JK ts daily: daily_JKM_ts
 # TTF:  ttf_dutch_ts
 # European Brent: eu_brent_ts 
 # coal prices
@@ -564,43 +765,6 @@ par(new = TRUE)
 plot( eu_brent_ts, col = "orange", axes = FALSE,  ylab = "")
 legend('topleft', legend=c("Henry Hub", "WTI crude", "NBP", "Platts JK", "TTF", "EU Brent"),
        col=c("red", "magenta", "black", "blue", "purple", "orange"), lty=1, cex=0.8)
-
-# lets get summary statistics:
-
-round(mean(ts_hh_outliers),2)
-round(mean(ts_crude_final),2)
-round(mean(NBP_ts),2) 
-round(mean(JK_ts),2)
-round(mean(eu_brent_ts),2)
-round(mean(ttf_dutch_ts),2)
-
-round(min(ts_hh_outliers),2)
-round(min(ts_crude_final),2)
-round(min(NBP_ts),2) 
-round(min(JK_ts),2)
-round(min(eu_brent_ts),2)
-round(min(ttf_dutch_ts),2)
-
-round(max(ts_hh_outliers),2)
-round(max(ts_crude_final),2)
-round(max(NBP_ts),2) 
-round(max(JK_ts),2)
-round(max(eu_brent_ts),2)
-round(max(ttf_dutch_ts),2)
-
-round(sd(ts_hh_outliers),2)
-round(sd(ts_crude_final),2)
-round(sd(NBP_ts),2) 
-round(sd(JK_ts),2)
-round(sd(eu_brent_ts),2)
-round(sd(ttf_dutch_ts),2)
-
-length(ts_hh_outliers)
-length(ts_crude_final) 
-length(NBP_ts)
-length(JK_ts)
-length(eu_brent_ts)
-length(ttf_dutch_ts)
 
 
 # let us test the stationarity of all these ts: 
