@@ -283,7 +283,7 @@ weekly_mean_hh <- aggregate(price ~ week,  hh_prices_00, mean)
 
 #now we convert to a time series
 weekly_mean_hh
-ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 05), frequency=52)
+ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 05), end = c(2022, 47), frequency=52)
      
 # now we convert to momthly
 
@@ -407,7 +407,7 @@ na_crude_wti_sub <- which(is.na(crude_wti_sub))
 length(na_crude_wti_sub)
 
 # let us first convert to ts:
-ts_wti_og <- ts(crude_wti_sub$price, start = c(1997, 32), frequency = 365)
+ts_wti_og <- ts(crude_wti_sub$price, start = c(1997, 32), end = c(2022, 331),frequency = 365)
 # now impute the first value
 ts_wti_og_transform <- ts_wti_og
 ts_wti_og_transform[1] <- ts_wti_og_transform[2]
@@ -444,46 +444,51 @@ plot(ts_wti_og_transform)
 ts_wti_outlier <- ts_wti_og_transform
 index_min <- which.min(ts_wti_outlier)
 crude_wti_sub$time[index_min]
+print(crude_wti_sub$time[index_min])
 ts_wti_outlier[index_min] <- (ts_wti_outlier[index_min-1] + ts_wti_outlier[index_min+1])/2 
 plot(ts_wti_outlier)
 
 index_min <- which.min(ts_wti_outlier)
 crude_wti_sub$time[index_min]
+print(crude_wti_sub$time[index_min])
 ts_wti_outlier[index_min] <- (ts_wti_outlier[index_min-1] + ts_wti_outlier[index_min+1])/2 
 plot(ts_wti_outlier)
 
 index_min <- which.min(ts_wti_outlier)
 crude_wti_sub$time[index_min]
+print(crude_wti_sub$time[index_min])
 ts_wti_outlier[index_min] <- (ts_wti_outlier[index_min-1] + ts_wti_outlier[index_min+1])/2 
 
 plot(ts_wti_outlier)
+
+ts_wti_daily <- ts_wti_outlier
 
 # now let us transform to weekly and monthly time series:
 
-hh_prices_00$price <- hh_prices_01
-week <- as.Date(cut(hh_prices_00$time, "week"))
-weekly_mean_hh <- aggregate(price ~ week,  hh_prices_00, mean)
+crude_wti_sub$price <- ts_wti_daily
+week <- as.Date(cut(crude_wti_sub$time, "week"))
+weekly_mean_wti <- aggregate(price ~ week,  crude_wti_sub, mean)
 
 #now we convert to a time series
-weekly_mean_hh
-ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 05), frequency=52)
+weekly_mean_wti
+ts_wti_weekly <- ts(weekly_mean_wti$price, start=c(1997, 05), end = c(2022, 47), frequency=52)
 
 # now we convert to momthly
 
-month <- as.Date(cut(hh_prices_00$time, "month"))
-monthly_mean_hh <- aggregate(price ~ month,  hh_prices_00, mean)
-ts_hh_monthly <- ts(monthly_mean_hh$price, start=c(1997, 02), frequency=12)
+month <- as.Date(cut(crude_wti_sub$time, "month"))
+monthly_mean_wti <- aggregate(price ~ month,  crude_wti_sub, mean)
+ts_wti_monthly <- ts(monthly_mean_wti$price, start=c(1997, 02), frequency=12)
 
 dev.off()
-plot(hh_prices_01, ylab = "USD/MMBtu", xlab = "Time", ylim = c(0,20))
+plot(ts_wti_daily, ylab = "Dollars per Barrel", xlab = "Time", ylim = c(0,150))
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") # Grid line color)      # Grid line width
 par(new=TRUE)
-plot(ts_hh_weekly , col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim = c(0,20))
+plot(ts_wti_weekly  , col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim = c(0,150))
 par(new=TRUE)
-plot(ts_hh_monthly, col = "red", axes= FALSE, ylab = "", xlab = "", ylim = c(0,20))
-legend('topleft', legend=c("Daily Henry Hub - imputed, 2 outliers removed", "Weekly Henry Hub, 2 outliers removed ", "Monthly Henry Hub, 2 outliers removed"),
+plot(ts_wti_monthly , col = "red", axes= FALSE, ylab = "", xlab = "", ylim = c(0,150))
+legend('topleft', legend=c("Daily WTI Crude - imputed, 3 outliers removed", "Weekly WTI crude, 3 outliers removed ", "Monthly WTI crude, 3 outliers removed"),
        col=c("black", "blue", "red"), lty=1:2, cex=1.2)
 
 
@@ -642,9 +647,96 @@ plot(eu_brent_sub$time, eu_brent_sub$price, type = "l")
 eu_brent_ts <- ts(eu_brent_sub$price, start = c(1997,05), end = c(2022, 50), frequency =52)
 plot(eu_brent_ts)
 
+# now the daily rs
 eu_brent_daily <- eu_brent_daily
+# remove the first two rows:
+eu_brent_daily <- eu_brent_daily[-c(1:2),]
+eu_brent_daily
+colnames(eu_brent_daily) <- c("time", "price")
+eu_brent_daily
 
-crude_ts_daily <- crude_wti_daily
+
+# now impute all daily values: 
+raw.data <- eu_brent_daily
+raw.data$time <- anydate(raw.data$time)
+raw.data$time <- as.Date(raw.data$time)
+sorted.data <- raw.data
+data.length <- length(sorted.data$time)
+time.min <- sorted.data$time[1]
+time.max <- sorted.data$time[data.length]
+all.dates <- seq(time.min, time.max, by="day")
+all.dates.frame <- data.frame(list(time=all.dates))
+merged.data <- merge(all.dates.frame, sorted.data, all=T)
+eu_brent_df <- merged.data
+
+missing_values <- length(which(is.na(eu_brent_df)))
+# time to impute!! 
+# we only want the subset from 1997 onwards
+
+eu_brent_sub <- eu_brent_df[-c(1:3546),]
+# we will create a copy of this first:
+ts_og_brent <- ts(eu_brent_sub$price, start = c(1997,  32), frequency = 365)
+eu_brent_sub_transform <- ts_og_brent 
+
+# imput first value since it is missing:
+eu_brent_sub_transform[1] <- eu_brent_sub_transform[2]
+na_missing <- which(is.na(eu_brent_sub_transform))
+
+
+for(i in na_missing){
+  # the below will only work if either surrounding entry is not NA 
+  eu_brent_sub_transform[i] <-  (eu_brent_sub_transform[i-1] + eu_brent_sub_transform[i+1])/2
+  if(is.na(eu_brent_sub_transform[i+1])){
+    eu_brent_sub_transform[i] <- eu_brent_sub_transform[i-1] 
+  }
+}
+
+# now we compare the two ts: 
+plot(eu_brent_sub_transform)
+
+par(mfrow = c(2,1),  mai = c(0.5, 0.5, 0.4, 0.4))
+plot(eu_brent_sub_transform, col = "red", ylab = "USD/MMBtu")
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily EU Brent - imputed"),
+       col=c("red"), lty=1, cex=1.2)
+plot(ts_og_brent , col = "black",  ylab = "USD/MMBtu" )
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily EU Brent"),
+       col=c("black"), lty=1, cex=1.2)
+
+brent_daily_ts <- eu_brent_sub_transform
+
+# now we create weekly and monthly ts
+
+eu_brent_sub$price <- eu_brent_sub_transform
+week <- as.Date(cut(eu_brent_sub$time, "week"))
+weekly_mean_brent <- aggregate(price ~ week,  eu_brent_sub, mean, na.rm=TRUE)
+brent_week_ts <- ts(weekly_mean_brent$price, start = c(1997, 05), end = c(2022, 47), frequency = 52)
+
+# now we convert to monthly:
+month <- as.Date(cut(eu_brent_sub$time, "month"))
+monthly_mean_brent <- aggregate(price ~ month,  eu_brent_sub, mean, na.rm=TRUE)
+# convert to ts:
+brent_month_ts <- ts(monthly_mean_brent$price, start = c(1997, 02), frequency = 12 )
+
+
+dev.off()
+plot(brent_daily_ts , ylab = "Dollars Per Barrel", xlab = "Time", ylim = c(0,150))
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") # Grid line color)      # Grid line width
+par(new=TRUE)
+plot(brent_week_ts , col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim = c(0,150))
+par(new=TRUE)
+plot(brent_month_ts , col = "red", axes= FALSE, ylab = "", xlab = "", ylim = c(0,150))
+legend('topleft', legend=c("Daily EU Brent - imputed ", "Weekly EU Brent", "Monthly EU Brent"),
+       col=c("black", "blue", "red"), lty=1:2, cex=1.2)
+
+
 
 # DUTCH TTF ####################################################################
 
