@@ -23,14 +23,11 @@ japan_korea <- collated_prices
 eu_brent <- EU_BRENT
 ttf_ts <- TTF_DUTCH_ALL
 
-eu_brent_daily <- 
-eu_brent_monthly <- 
+eu_brent_daily <- eu_brent_daily
   
-crude_ts_daily <- 
-crude_ts_monthly <- 
+crude_ts_daily <- crude_wti_daily
   
-henry_hub_daily <- 
-henry_hub_monthly <-
+
 
 # DATA CLEANING  ##############################################################
 
@@ -105,7 +102,7 @@ weekly_mean_nbp
 weekly_mean_nbp <- weekly_mean_nbp[-1,]
 NBP_ts <- ts(weekly_mean_nbp$price, start = c(1997,02), frequency = 52)
 plot(weekly_mean_nbp[,1], weekly_mean_nbp$price, type = "l")
-
+p
 
 # look at daily and monthly ts:
 plot(NBP_price_df_COPY[,1], NBP_price_df_COPY[,2], type = "l") 
@@ -152,6 +149,22 @@ month_mean_nbp <- aggregate(price ~ month_nbp,  NBP_price_df_COPY, mean)
 ts_month_nbp <- ts(month_mean_nbp$price, start = c(1997, 02), frequency = 12)
 plot(ts_month_nbp)
 
+# we now plot all three time series:
+dev.off()
+plot(nbp_ts_transform, ylab = "USD/MMBtu", xlab = "Time", ylim = c(0,70))
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") # Grid line color)      # Grid line width
+par(new=TRUE)
+plot(NBP_ts, col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim = c(0,70))
+par(new=TRUE)
+plot(ts_month_nbp, col = "red", axes= FALSE, ylab = "", xlab = "", ylim = c(0,70))
+legend('topleft', legend=c("Daily NBP - imputed ", "Weekly NBP", "Monthly NBP"),
+       col=c("black", "blue", "red"), lty=1:2, cex=1.2)
+
+
+
+
 # HENRY HUB ####################################################################
 
 
@@ -192,11 +205,44 @@ row.names(hh_prices_00) <- NULL
 
 ts_HH_prices <- hh_prices_00$price
 
-term_ts_hh <- ts(ts_HH_prices, start=c(1997, 02), end=c(2022, 11), frequency=365)
+term_ts_hh <- ts(ts_HH_prices, start=c(1997, 32), frequency=365)
 
 autoplot(term_ts_hh) + labs(x = "Time", y = "Price, USD/mmBtu") + 
   labs(color="Destination") + theme_gray() + scale_y_continuous(labels=scales::comma) +
   theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
+
+# this ts has many na values (once again!)
+na_values_hh <- which(is.na(term_ts_hh))
+ts_hh_daily_transform <- term_ts_hh
+# need to impute the very first entry ass well:
+ts_hh_daily_transform[1] <- ts_hh_daily_transform[2]
+na_values_hh <- which(is.na(ts_hh_daily_transform))
+# we can impute these with the surrounding averages:
+for(i in na_values_hh){
+  # the below will only work if either surrounding entry is not NA 
+  ts_hh_daily_transform[i] <- (ts_hh_daily_transform[i-1] + ts_hh_daily_transform[i+1])/2
+  if(is.na(ts_hh_daily_transform[i+1])){
+    ts_hh_daily_transform[i] <- ts_hh_daily_transform[i-1] 
+  }
+}
+
+plot(ts_hh_daily_transform)
+
+# lets compare this imputed to un-imputed data:
+par(mfrow = c(2,1),  mai = c(0.5, 0.5, 0.4, 0.4))
+plot(ts_hh_daily_transform, col = "red", ylab = "USD/MMBtu")
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily Henry Hub- imputed"),
+       col=c("red"), lty=1, cex=1.2)
+plot(term_ts_hh, col = "black",  ylab = "USD/MMBtu" )
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily Henry Hub"),
+       col=c("black"), lty=1, cex=1.2)
+
 
 # REMOVING OUTLIERS in daily henry hub ########################################
 
@@ -205,48 +251,61 @@ autoplot(term_ts_hh) + labs(x = "Time", y = "Price, USD/mmBtu") +
 # set called hh_prices_01, where we use the dataset that starts exactly on the 
 # first day of 1997-02-01
 
-hh_prices_01 <- hh_prices_00
+hh_prices_01 <- ts_hh_daily_transform
 
 # let us remove the below two max prices and impute them with NA values
 
-index_max <- which.max(hh_prices_01$price)
-hh_prices_01[index_max,]$price <- NA
+index_max <- which.max(hh_prices_01)
+# this index corresponds to date:
+hh_prices_00$time[index_max]
+hh_prices_01[index_max] <- (hh_prices_01[index_max-1] + hh_prices_01[index_max+1])/2 
 
 # now get the next largest value and set to NA 
 
-index_max <- which.max(hh_prices_01$price)
-hh_prices_01[index_max,]$price <- NA
+index_max <- which.max(hh_prices_01)
+hh_prices_00$time[index_max]
+hh_prices_01[index_max] <- (hh_prices_01[index_max-1] + hh_prices_01[index_max+1])/2 
 
-# now plot again to show the difference
+index_max <- which.max(hh_prices_01)
+hh_prices_00$time[index_max]
+hh_prices_01[index_max] <- (hh_prices_01[index_max-1] + hh_prices_01[index_max+1])/2 
 
-ts_HH_prices_01 <- hh_prices_01$price
-term_ts_hh_01 <- ts(ts_HH_prices_01, start=c(1997, 02), end=c(2022, 11), frequency=365)
-
-autoplot(term_ts_hh_01) + labs(x = "Time", y = "Price, USD/mmBtu") + 
-  labs(color="Destination") +
-  theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
+# now our daily ts without outliersr is:
+hh_prices_01
 
 # GROUPING DAILY DATA BY WEEK #################################################
 
 # we use the daily data with the outliers removed to construct our weekly data: 
 
-week <- as.Date(cut(hh_prices_01$time, "week"))
-weekly_mean_hh <- aggregate(price ~ week,  hh_prices_01, mean)
-
-# the above misses the week of 2005-09-26 -- this is because the corresponding
-# prices for that week have all NAs in them. We will impute this row and add
-# and NA value to it so our time series will correspond better:
-
-new_row <- data.frame(week = as.Date("2005-09-26"), price = NA)
-newData <- rbind(weekly_mean_hh[1:452,], new_row, weekly_mean_hh[453:1347,] )
-henry_hub_weekly_00 <- newData
+hh_prices_00$price <- hh_prices_01
+week <- as.Date(cut(hh_prices_00$time, "week"))
+weekly_mean_hh <- aggregate(price ~ week,  hh_prices_00, mean)
 
 #now we convert to a time series
-ts_hh_weekly <- ts(henry_hub_weekly_00$price, start=c(1997, 02), end=c(2022, 11), frequency=52)
+weekly_mean_hh
+ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 05), frequency=52)
      
-autoplot(ts_hh_weekly) + labs(x = "Time", y = "Price, USD/mmBtu") + 
-  labs(color="Destination") +
-  theme(axis.text.y = element_text(angle = 90, vjust = 1, hjust=0.5))
+# now we convert to momthly
+
+month <- as.Date(cut(hh_prices_00$time, "month"))
+monthly_mean_hh <- aggregate(price ~ month,  hh_prices_00, mean)
+ts_hh_monthly <- ts(monthly_mean_hh$price, start=c(1997, 02), frequency=12)
+
+dev.off()
+plot(hh_prices_01, ylab = "USD/MMBtu", xlab = "Time", ylim = c(0,20))
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") # Grid line color)      # Grid line width
+par(new=TRUE)
+plot(ts_hh_weekly , col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim = c(0,20))
+par(new=TRUE)
+plot(ts_hh_monthly, col = "red", axes= FALSE, ylab = "", xlab = "", ylim = c(0,20))
+legend('topleft', legend=c("Daily Henry Hub - imputed, 2 outliers removed", "Weekly Henry Hub, 2 outliers removed ", "Monthly Henry Hub, 2 outliers removed"),
+       col=c("black", "blue", "red"), lty=1:2, cex=1.2)
+
+
+
+
 
 # COMPARE TO ONLINE PUBLISHED HENRY HUB PRICES ################################
 
@@ -320,7 +379,116 @@ plot(ts_weekly_online_crude)
 ts_crude_final <- ts_weekly_online_crude 
 
 
-l# JKM   #################################################################
+# now the daily ts:
+crude_ts_daily <- crude_wti_daily
+# remove the first two rows since they are NA:
+crude_ts_daily <- crude_ts_daily[-c(1:2),]
+colnames(crude_ts_daily) <- c("time", "price")
+
+# correct for missing values:
+raw.data <- crude_ts_daily
+raw.data$time <- anydate(raw.data$time)
+raw.data$time <- as.Date(raw.data$time)
+sorted.data <- raw.data
+data.length <- length(sorted.data$time)
+time.min <- sorted.data$time[1]
+time.max <- sorted.data$time[data.length]
+all.dates <- seq(time.min, time.max, by="day")
+all.dates.frame <- data.frame(list(time=all.dates))
+merged.data <- merge(all.dates.frame, sorted.data, all=T)
+crude_wti_df <- merged.data
+
+na_crude_wti <- which(is.na(crude_wti_df))
+length(na_crude_wti)
+
+# we only want 1997 onwards really: 
+crude_wti_sub <- crude_wti_df[-c(1:4049),]
+na_crude_wti_sub <- which(is.na(crude_wti_sub))
+length(na_crude_wti_sub)
+
+# let us first convert to ts:
+ts_wti_og <- ts(crude_wti_sub$price, start = c(1997, 32), frequency = 365)
+# now impute the first value
+ts_wti_og_transform <- ts_wti_og
+ts_wti_og_transform[1] <- ts_wti_og_transform[2]
+na_crude_sub <- which(is.na(ts_wti_og_transform))
+for(i in na_crude_sub){
+  # the below will only work if either surrounding entry is not NA 
+  ts_wti_og_transform[i] <-  (ts_wti_og_transform[i-1] + ts_wti_og_transform[i+1])/2
+  if(is.na(ts_wti_og_transform[i+1])){
+    ts_wti_og_transform[i] <- ts_wti_og_transform[i-1] 
+  }
+}
+
+# now let us plot the differences: 
+
+# lets compare this imputed to un-imputed data:
+par(mfrow = c(2,1),  mai = c(0.5, 0.5, 0.4, 0.4))
+plot(ts_wti_og_transform, col = "red", ylab = "USD/MMBtu")
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily WTI Crude - imputed"),
+       col=c("red"), lty=1, cex=1.2)
+plot(ts_wti_og , col = "black",  ylab = "USD/MMBtu" )
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") 
+legend('topleft', legend=c("Daily WTI Crude"),
+       col=c("black"), lty=1, cex=1.2)
+
+# there is one HUGE outlier:
+
+dev.off()
+plot(ts_wti_og_transform)
+ts_wti_outlier <- ts_wti_og_transform
+index_min <- which.min(ts_wti_outlier)
+crude_wti_sub$time[index_min]
+ts_wti_outlier[index_min] <- (ts_wti_outlier[index_min-1] + ts_wti_outlier[index_min+1])/2 
+plot(ts_wti_outlier)
+
+index_min <- which.min(ts_wti_outlier)
+crude_wti_sub$time[index_min]
+ts_wti_outlier[index_min] <- (ts_wti_outlier[index_min-1] + ts_wti_outlier[index_min+1])/2 
+plot(ts_wti_outlier)
+
+index_min <- which.min(ts_wti_outlier)
+crude_wti_sub$time[index_min]
+ts_wti_outlier[index_min] <- (ts_wti_outlier[index_min-1] + ts_wti_outlier[index_min+1])/2 
+
+plot(ts_wti_outlier)
+
+# now let us transform to weekly and monthly time series:
+
+hh_prices_00$price <- hh_prices_01
+week <- as.Date(cut(hh_prices_00$time, "week"))
+weekly_mean_hh <- aggregate(price ~ week,  hh_prices_00, mean)
+
+#now we convert to a time series
+weekly_mean_hh
+ts_hh_weekly <- ts(weekly_mean_hh$price, start=c(1997, 05), frequency=52)
+
+# now we convert to momthly
+
+month <- as.Date(cut(hh_prices_00$time, "month"))
+monthly_mean_hh <- aggregate(price ~ month,  hh_prices_00, mean)
+ts_hh_monthly <- ts(monthly_mean_hh$price, start=c(1997, 02), frequency=12)
+
+dev.off()
+plot(hh_prices_01, ylab = "USD/MMBtu", xlab = "Time", ylim = c(0,20))
+grid(nx = NULL, ny = NULL,
+     lty = 2,      # Grid line type
+     col = "gray") # Grid line color)      # Grid line width
+par(new=TRUE)
+plot(ts_hh_weekly , col = "blue", axes = FALSE, lty = "dashed", , ylab = "", xlab = "", ylim = c(0,20))
+par(new=TRUE)
+plot(ts_hh_monthly, col = "red", axes= FALSE, ylab = "", xlab = "", ylim = c(0,20))
+legend('topleft', legend=c("Daily Henry Hub - imputed, 2 outliers removed", "Weekly Henry Hub, 2 outliers removed ", "Monthly Henry Hub, 2 outliers removed"),
+       col=c("black", "blue", "red"), lty=1:2, cex=1.2)
+
+
+
+# JKM   #################################################################
 
 japan_korea <- japan_korea[-1,]
 japan_korea <- japan_korea[,c(1,2)]
@@ -473,6 +641,10 @@ plot(eu_brent_sub$time, eu_brent_sub$price, type = "l")
 
 eu_brent_ts <- ts(eu_brent_sub$price, start = c(1997,05), end = c(2022, 50), frequency =52)
 plot(eu_brent_ts)
+
+eu_brent_daily <- eu_brent_daily
+
+crude_ts_daily <- crude_wti_daily
 
 # DUTCH TTF ####################################################################
 
