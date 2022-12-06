@@ -1,0 +1,62 @@
+# LOADING PACKAGES ############################################################
+
+library(dplyr)
+library(lubridate)
+library(anytime)
+library(ggfortify)
+library(stats)
+library(strucchange)
+library(forecast)
+library(tseries)
+library(data.table)
+library(lmtest)
+library(aTSA)
+
+# BREAKPOINTS #################################################################
+
+bp_hh_d <- breakpoints(hh_prices_01 ~ 1, format.times = TRUE)
+confint(bp_hh_d )
+bp_hh_w <- breakpoints(ts_hh_weekly ~ 1, format.times = TRUE)
+confint(bp_hh_w)
+bp_hh_m <- breakpoints(ts_hh_monthly ~ 1, format.times = TRUE)
+confint(bp_hh_m)
+
+bp_wti_d <- breakpoints(ts_wti_daily ~ 1, format.times = TRUE)
+confint(bp_wti_d)
+bp_wti_w <- breakpoints(ts_wti_weekly ~ 1, format.times = TRUE)
+confint(bp_wti_w)
+bp_wti_m <- breakpoints(ts_wti_monthly ~ 1, format.times = TRUE)
+confint(bp_wti_m)
+
+bp_nbp_d <- breakpoints(nbp_ts_transform ~ 1, format.times = TRUE)
+confint(bp_nbp_d )
+bp_nbp_w <- breakpoints(NBP_ts ~ 1, format.times = TRUE)
+confint(bp_nbp_w)
+bp_nbp_m <- breakpoints(ts_month_nbp ~ 1, format.times = TRUE)
+confint(bp_nbp_m)
+
+bp_jkm_d <- breakpoints(JK_ts ~ 1, format.times = TRUE)
+confint(bp_jkm_d)
+bp_jkm_w <- breakpoints(daily_JKM_ts ~ 1, format.times = TRUE)
+confint(bp_jkm_w)
+bp_jkm_m <- breakpoints(monthly_ts_jkm ~ 1, format.times = TRUE)
+confint(bp_jkm_m)
+
+bp_b_d <- breakpoints(brent_daily_ts ~ 1, format.times = TRUE)
+confint(bp_b_d)
+bp_b_w <- breakpoints(brent_week_ts ~ 1, format.times = TRUE)
+confint(bp_b_w )
+bp_b_m <- breakpoints(brent_month_ts ~ 1, format.times = TRUE)
+confint(bp_b_m )
+
+bp_ttf_d <- breakpoints(ttf_daily ~ 1, format.times = TRUE)
+confint(bp_ttf_d)
+bp_ttf_w <- breakpoints(ttf_dutch_ts ~ 1, format.times = TRUE)
+confint(bp_ttf_w)
+bp_ttf_m <- breakpoints(ts_month_ttf ~ 1, format.times = TRUE)
+confint(bp_ttf_m)
+
+bp_eu_m <- breakpoints(wb_eu_ng ~ 1, format.times = TRUE)
+confint(bp_eu_m )
+bp_jap_m <- breakpoints(wb_japan_lng ~ 1, format.times = TRUE)
+confint(bp_jap_m)
