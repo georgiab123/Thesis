@@ -37,7 +37,7 @@ plot(ts_hh_monthly ,  xlab="Time", ylab="USD/ MMBtu", )
 lines(fitted(bp_hh_m, breaks = 3), col = "blue")
 lines(ci_hh_m)
 legend('topleft', legend=c("Henry Hub: Monthly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.3)
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") 
@@ -58,11 +58,11 @@ legend('topleft', legend=c("WTI Crude: Weekly"),
 # wti monthly
 bp_wti_m <- breakpoints(ts_wti_monthly ~ 1, format.times = TRUE)
 ci_wti_m <- confint(bp_wti_m)
-plot(ts_wti_monthly ,  xlab="Time", ylab="USD/ MMBtu", )
+plot(ts_wti_monthly ,  xlab="Time", ylab="Dollars per Barrel", )
 lines(fitted(bp_wti_m, breaks = 5), col = "blue")
 lines(ci_wti_m )
 legend('topleft', legend=c("WTI Crude: Monthly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") 
@@ -79,7 +79,7 @@ plot(NBP_ts ,  xlab="Time", ylab="USD/ MMBtu", )
 lines(fitted(bp_nbp_w , breaks = 4), col = 4)
 lines(ci_nbp_w[4])
 legend('topleft', legend=c("NBP: Weekly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 
 # monthly
 bp_nbp_m <- breakpoints(ts_month_nbp ~ 1, format.times = TRUE)
@@ -88,7 +88,7 @@ plot(ts_month_nbp ,  xlab="Time", ylab="USD/ MMBtu", )
 lines(fitted(bp_nbp_m , breaks = 2), col = "blue")
 lines(ci_nbp_m )
 legend('topleft', legend=c("NBP: Monthly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") 
@@ -106,7 +106,7 @@ plot(monthly_ts_jkm ,  xlab="Time", ylab="USD/ MMBtu", col = "black")
 lines(fitted(bp_jkm_m  , breaks = 1), col = "blue", lwd = 0.8)
 lines(confint(bp_jkm_m), lwd = 1)
 legend('topleft', legend=c("JKM: Monthly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") 
@@ -121,11 +121,11 @@ confint(bp_b_w )
 
 bp_b_m <- breakpoints(brent_month_ts ~ 1, format.times = TRUE)
 confint(bp_b_m )
-plot(brent_month_ts,  xlab="Time", ylab="USD/ MMBtu", col = "black")
+plot(brent_month_ts,  xlab="Time", ylab="Dollars per Barrel", col = "black")
 lines(fitted(bp_b_m, breaks = 5), col = "blue", lwd = 0.8)
 lines(confint(bp_b_m), lwd = 1)
 legend('topleft', legend=c("EU Brent: Monthly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") 
@@ -145,18 +145,20 @@ plot(ts_month_ttf,  xlab="Time", ylab="USD/ MMBtu", col = "black")
 lines(fitted(bp_ttf_m, breaks = 1), col = "blue", lwd = 0.8)
 #lines(confint(bp_ttf_w), lwd = 1)
 legend('topleft', legend=c("TTF: Monthly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") 
 abline(v = time(ts_month_ttf)[132], lty = 2)
+
+
 
 bp_eu_m <- breakpoints(wb_eu_ng ~ 1, format.times = TRUE)
 confint(bp_eu_m)
 plot(wb_eu_ng,  xlab="Time", ylab="USD/ MMBtu", col = "black")
 lines(fitted(bp_eu_m, breaks = 3), col = "blue", lwd = 0.8)
 legend('topleft', legend=c("EU Natural Gas"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 grid(nx = NULL, ny = NULL,
      lty = 2,      # Grid line type
      col = "gray") 
@@ -173,7 +175,7 @@ grid(nx = NULL, ny = NULL,
 lines(fitted(bp_jap_m, breaks = 5), col = "blue", lwd = 1.2)
 lines(confint(bp_jap_m), lwd = 1)
 legend('topleft', legend=c("Japan LNG: Monthly"),
-       col=c("black"), lty=1, cex=0.8)
+       col=c("black"), lty=1, cex=1.5)
 
 
 
