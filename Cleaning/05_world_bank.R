@@ -68,15 +68,18 @@ length(world_bank$time[-c(1:450)])
 #no outliers removed from the below: 
 plot(subset_JKM[,1], subset_JKM[,2], type = "l", axes =  TRUE, xlab = "", ylab = "", col = "blue", ylim = c(1,60))
 par(new = TRUE)
-plot(world_bank$time[-c(1:450)], world_bank$jap_gas[-c(1:450)], type = "l", col = "red", xlab = "Date", ylab = "US dollars per MMBtu", , ylim = c(1,60))
+
+plot(world_bank$time[-c(1:241)], world_bank$jap_gas[-c(1:241)], type = "l", col = "red", xlab = "Date", ylab = "US dollars per MMBtu", , ylim = c(1,60))
 legend('topleft', legend=c("World bank: monthy Japanese LNG", "S&P Platts: monthly JKM"),
        col=c("red", "blue"), lty=1, cex=0.8)
-
+par(new = TRUE)
+plot(wb_japan_lng, ylim  = c(1,60))
 
 wb_japan_lng <- world_bank[-c(1:241),]
 wb_japan_lng <- wb_japan_lng$jap_gas
+plot(wb_japan_lng)
 wb_japan_lng <- ts(wb_japan_lng, start = c(1997, 02), frequency = 12)
-
+plot(wb_japan_lng)
 
 # lets also get the european natural gas prices:
 wb_eu_ng <- world_bank[-c(1:241),]
@@ -102,4 +105,30 @@ legend('topleft', legend=c("World Bank EU Natural Gas ", "TTF Monthly", "NBP Mon
        col=c("black", "blue", "red"), lty=1, cex=1.2)
 
 
-plot(wb_eu_ng)
+mts <- as.numeric(time(diff(log(wb_eu_ng))))
+tms <- date_decimal(mts)
+write.csv(data.frame(Y=as.matrix(diff(log(wb_eu_ng))), date=tms), file="wb_eu.csv")
+mts <- as.numeric(time(diff(log(wb_japan_lng))))
+tms <- date_decimal(mts)
+write.csv(data.frame(Y=as.matrix(diff(log(wb_japan_lng))), date=tms), file="wb_jap.csv")
+
+
+for(i in ts_names){
+  ts_type = get(i)
+  mts <- as.numeric(time(ts_type))
+  tms <- date_decimal(mts)
+  file_name <- paste(i, "csv", sep= ".")
+  write.csv(data.frame(Y=as.matrix(ts_type), date=tms), file=file_name)
+}
+
+for(i in)
+  
+
+
+
+
+
+
+
+
+
