@@ -1,16 +1,78 @@
-# lets get henry hub daily, weekly, monthly
+# LOADING PACKAGES ############################################################
 
-# lets get crude daily, weekly, monthly
+library(dplyr)
+library(lubridate)
+library(anytime)
+library(ggfortify)
+library(stats)
+library(strucchange)
+library(forecast)
+library(tseries)
+library(data.table)
 
-# TTF
 
-# the mean -- daily, weekly, monthly
-# no, we will use the
+# IMPORTING DATA ##########################################################
+
+# all from local repostory -- generated using 04_break_testing script
+# Henry Hub:
+  # Daily
+
+  # Weekly
+  
+  # Monthly
+
+# TTF:
+  # Daily
+
+  # Weekly
+
+  # Monthly
+
+# JKM:
+  # Daily
+
+  # Weekly
+
+  # Monthly
+
+# NBP :
+  # Daily
+
+  # Weekly
+
+  # Monthly
+
+# WTI Crude:
+  # Daily
+
+  # Weekly
+
+  # Monthly
+
+# EU brent:
+  # Daily
+
+  # Weekly
+
+  # Monthly
+
+# World Bank -- only monthly
+
+
+# run the summary statistics using my for loop:
+for(i in ts_names){
+  print(i)
+  print(mean(get(i)))
+  
+}
+
+# MEAN #####################################################################
+
 round(mean(hh_prices_01),2)
 round(mean(ts_hh_weekly),2)
 round(mean(ts_hh_monthly),2)
 
-# check if the below has outliers removed
+
 round(mean(ts_wti_daily),2)
 round(mean(ts_wti_weekly),2)
 round(mean(ts_wti_monthly),2)
@@ -23,7 +85,6 @@ round(mean(JK_ts),2)
 round(mean(daily_JKM_ts),2)
 round(mean(monthly_ts_jkm),2)
 
-# check if the below has outliers removed. 
 round(mean(brent_daily_ts), 2) 
 round(mean(brent_week_ts),2)
 round(mean(brent_month_ts),2)
@@ -155,15 +216,15 @@ length(ts_month_ttf)
 length(wb_eu_ng)
 length(wb_japan_lng)
        
-#check start and end dates of each: 
 
+# START/END DATES ############################################
 
 head(hh_prices_01) 
 head(ts_hh_weekly)
 tail(ts_hh_weekly)
+
 head(ts_hh_monthly)
 tail(ts_hh_monthly)
-
 
 head(ts_wti_daily)
 tail(ts_wti_daily)
@@ -219,5 +280,3 @@ length(wb_japan_lng)
        
       
        
-       
-       lng)
