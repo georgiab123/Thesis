@@ -74,33 +74,33 @@ plot(ocus.oil)
 
 
 # the below takes ~ 30 minuts to run
-bp_hh_d <- breakpoints(log(hh_daily) ~ 1, format.times = TRUE, h = 0.1)
-bp_jkm_d <- breakpoints(log(jkm_daily) ~ 1, format.times = TRUE, h = 0.1 )
-bp_nbp_d <- breakpoints(log(nbp_daily) ~ 1, format.times = TRUE, h = 0.1 )
-bp_ttf_d <- breakpoints(log(ttf_daily) ~ 1, format.times = TRUE, h = 0.1 )
-bp_wti_d <- breakpoints(log(wti_daily) ~ 1, format.times = TRUE, h = 0.1 )
-bp_brent_d <- breakpoints(log(brent_daily) ~ 1, format.times = TRUE, h = 0.1 )
+bp_hh_d <- breakpoints(log(hh_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5)
+bp_jkm_d <- breakpoints(log(jkm_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 1 ) # or 6/7
+bp_nbp_d <- breakpoints(log(nbp_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
+bp_ttf_d <- breakpoints(log(ttf_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
+bp_wti_d <- breakpoints(log(wti_daily) ~ 1, format.times = TRUE, h = 0.1, breaks =6  )
+bp_brent_d <- breakpoints(log(brent_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 2 )
 
 
 # below is very quick, < 1 minute
-bp_hh_w <- breakpoints(log(hh_weekly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_jkm_w <- breakpoints(log(jkm_weekly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_nbp_w <- breakpoints(log(nbp_weekly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_ttf_w <- breakpoints(log(ttf_weekly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_wti_w <- breakpoints(log(wti_weekly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_brent_w <- breakpoints(log(brent_weekly) ~ 1, format.times = TRUE, h = 0.1 )
+bp_hh_w <- breakpoints(log(hh_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
+bp_jkm_w <- breakpoints(log(jkm_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4)
+bp_nbp_w <- breakpoints(log(nbp_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks  = 5)
+bp_ttf_w <- breakpoints(log(ttf_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
+bp_wti_w <- breakpoints(log(wti_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6)
+bp_brent_w <- breakpoints(log(brent_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 3)
 
 
-bp_hh_m <- breakpoints(log(hh_monthly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_jkm_m <- breakpoints(log(jkm_monthly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_nbp_m <- breakpoints(log(nbp_monthly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_ttf_m <- breakpoints(log(ttf_monthly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_wti_m <- breakpoints(log(wti_monthly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_brent_m <- breakpoints(log(brent_monthly) ~ 1, format.times = TRUE, h = 0.1 )
-bp_eu_m <- breakpoints(log(wb_eu_ng) ~ 1, format.times = TRUE,h = 0.1 )
-bp_jap_m <- breakpoints(log(wb_japan_lng) ~ 1, format.times = TRUE, h = 0.1 )
+bp_hh_m <- breakpoints(log(hh_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
+bp_jkm_m <- breakpoints(log(jkm_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
+bp_nbp_m <- breakpoints(log(nbp_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 5)
+bp_ttf_m <- breakpoints(log(ttf_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4)
+bp_wti_m <- breakpoints(log(wti_monthly) ~ 1, format.times = TRUE, h = 0.1 , breaks = 6)
+bp_brent_m <- breakpoints(log(brent_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 3 )
+bp_eu_m <- breakpoints(log(wb_eu_ng) ~ 1, format.times = TRUE,h = 0.1, breaks = 5)
+bp_jap_m <- breakpoints(log(wb_japan_lng) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
 
-# SEQUENTIAL TESTS ###################################################
+# SUP F TESTS #################################################################
 
 # conduct sequential supf tests
 results_1 <- c()
@@ -133,6 +133,47 @@ for(i in results_names_d){
   results_2_d <- append(results_2, ts_results_2)
   results_3_d <- append(results_3, ts_results_3)
 }
+
+df_hh <- data.frame(Y=as.matrix(hh_daily_log), date=time(hh_daily_log))
+hh_daily_log_seqtests <- doseqtests("Y", data = df_hh, prewhit = 0, eps1=0.10, m = 8)
+
+df_nbp <- data.frame(Y=as.matrix(nbp_daily_log), date=time(nbp_daily_log))
+nbp_daily_log_seqtests <- doseqtests("Y", data = df_nbp, prewhit = 0, eps1=0.10, m = 8)
+
+df_ttf <- data.frame(Y=as.matrix(ttf_daily_log), date=time(ttf_daily_log))
+ttf_daily_log_seqtests <- doseqtests("Y", data = df_ttf, prewhit = 0, eps1=0.10, m = 8)
+
+df_jkm <- data.frame(Y=as.matrix(jkm_daily_log), date=time(jkm_daily_log))
+jkm_daily_log_seqtests <- doseqtests("Y", data = df_jkm, prewhit = 0, eps1=0.10, m = 8)
+
+df_brent <- data.frame(Y=as.matrix(brent_daily_log), date=time(brent_daily_log))
+brent_daily_log_seqtests <- doseqtests("Y", data = df_brent, prewhit = 0, eps1=0.10, m = 8)
+
+
+
+df_wti <- data.frame(Y=as.matrix(wti_daily_log), date=time(wti_daily_log))
+wti_daily_log_seqtests <- doseqtests("Y", data = df_wti, prewhit = 0, eps1=0.10, m = 8)
+
+# to run
+df_eu <- data.frame(Y=as.matrix(log(wb_eu_ng)), date=time(log(wb_eu_ng)))
+eu_daily_log_seqtests <- doseqtests("Y", data = df_eu, prewhit = 0, eps1=0.10, m = 8)
+
+df_jap <- data.frame(Y=as.matrix(log(wb_japan_lng)), date=time(log(wb_japan_lng)))
+jap_daily_log_seqtests <- doseqtests("Y", data = df_jap, prewhit = 0, eps1=0.10, m = 8)
+
+#UD Max tests for all daily data
+tezt_1 <- dotest("Y", data = df_hh, prewhit = 0, eps1=0.10, m = 8)
+tezt_2 <- dotest("Y", data = df_nbp, prewhit = 0, eps1=0.10, m = 8)
+tezt_3 <- dotest("Y", data = df_ttf, prewhit = 0, eps1=0.10, m = 8)
+tezt_4 <- dotest("Y", data = df_jkm, prewhit = 0, eps1=0.10, m = 8)
+tezt_5 <- dotest("Y", data = df_brent, prewhit = 0, eps1=0.10, m = 8)
+tezt_6 <- dotest("Y", data = df_wti, prewhit = 0, eps1=0.10, m = 8)
+# below are monthly resilts
+dotest("Y", data = df_eu, prewhit = 0, eps1=0.10, m = 8)
+dotest("Y", data = df_jap, prewhit = 0, eps1=0.10, m = 8)
+
+# 10:48 start, 11:04 approx first daily ended; 11;20 TTF,11:25 brent daily #
+# this code does not run in the background
 
 # TESTING BREAKPOINTS VALIDITY  ###################################################
 
@@ -208,6 +249,7 @@ legend('topleft', legend=c("log(NBP monthly)"),
 
 
 # now lets test out the sctests after allowing for different breaks
+
 sctest(Fstats(log(hh_monthly) ~ breakfactor(bp_hh_m_1)), type = "supF")
 sctest(Fstats(log(hh_monthly) ~ breakfactor(bp_hh_m_2)), type = "supF")
 sctest(Fstats(log(hh_monthly) ~ breakfactor(bp_hh_m_3)), type = "supF")
@@ -302,7 +344,8 @@ fs.brent_d <- Fstats(hh_daily ~ 1)
 
 #BIC TESTING ###################################################
 # daily
-par( mfrow= c(6,2), mai = c(0.3, 0.3, 0.3, 0.3))
+dev.off
+par( mfrow= c(4,3), mai = c(0.3, 0.3, 0.3, 0.3))
 plot(bp_hh_d, main="log(HH daily)", ylab="BIC")
 plot(bp_jkm_d,  main="log(JKM daily)") 
 plot(bp_nbp_d, main="log(NBP daily)")
