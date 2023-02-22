@@ -112,6 +112,21 @@ mts <- as.numeric(time(diff(log(wb_japan_lng))))
 tms <- date_decimal(mts)
 write.csv(data.frame(Y=as.matrix(diff(log(wb_japan_lng))), date=tms), file="wb_jap.csv")
 
+mts <- as.numeric(time(log(wb_eu_ng)))
+tms <- date_decimal(mts)
+write.csv(data.frame(Y=as.matrix(log(wb_eu_ng)), date=tms), file="wb_eu_n.csv")
+mts <- as.numeric(time(log(wb_japan_lng)))
+tms <- date_decimal(mts)
+write.csv(data.frame(Y=as.matrix(log(wb_japan_lng)), date=tms), file="wb_jap_n.csv")
+
+
+mts <- as.numeric(time(diff(diff(log(wb_eu_ng)))))
+tms <- date_decimal(mts)
+write.csv(data.frame(Y=as.matrix(diff(diff(log(wb_eu_ng)))), date=tms), file="wb_eu_dd.csv")
+mts <- as.numeric(time(diff(diff(log(wb_japan_lng)))))
+tms <- date_decimal(mts)
+write.csv(data.frame(Y=as.matrix(diff(diff(log(wb_japan_lng)))), date=tms), file="wb_jap_dd.csv")
+
 
 for(i in ts_names){
   ts_type = get(i)
