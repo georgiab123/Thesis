@@ -68,6 +68,8 @@ for(i in ts_names){
 
 # MEAN #####################################################################
 
+
+
 round(mean(hh_prices_01),2)
 round(mean(ts_hh_weekly),2)
 round(mean(ts_hh_monthly),2)
