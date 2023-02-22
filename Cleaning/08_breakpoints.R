@@ -131,8 +131,8 @@ grid(nx = NULL, ny = NULL,
      col = "gray") 
 
 # TTF
-bp_ttf_d <- breakpoints(ttf_daily ~ 1, format.times = TRUE)
-confint(bp_ttf_d)
+#bp_ttf_d <- breakpoints(ttf_daily ~ 1, format.times = TRUE)
+#confint(bp_ttf_d)
 
 bp_ttf_w <- breakpoints(ttf_dutch_ts ~ 1, format.times = TRUE)
 confint(bp_ttf_w)
