@@ -75,28 +75,28 @@ plot(ocus.oil)
 
 # the below takes ~ 30 minuts to run
 bp_hh_d <- breakpoints(log(hh_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5)
-bp_jkm_d <- breakpoints(log(jkm_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 1 ) # or 6/7
+bp_jkm_d <- breakpoints(log(jkm_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 ) 
 bp_nbp_d <- breakpoints(log(nbp_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
-bp_ttf_d <- breakpoints(log(ttf_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
-bp_wti_d <- breakpoints(log(wti_daily) ~ 1, format.times = TRUE, h = 0.1, breaks =6  )
-bp_brent_d <- breakpoints(log(brent_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 2 )
+bp_ttf_d <- breakpoints(log(ttf_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
+bp_wti_d <- breakpoints(log(wti_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 6  )
+bp_brent_d <- breakpoints(log(brent_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5 )
 
 
 # below is very quick, < 1 minute
 bp_hh_w <- breakpoints(log(hh_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
-bp_jkm_w <- breakpoints(log(jkm_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4)
+bp_jkm_w <- breakpoints(log(jkm_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6)
 bp_nbp_w <- breakpoints(log(nbp_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks  = 5)
-bp_ttf_w <- breakpoints(log(ttf_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
+bp_ttf_w <- breakpoints(log(ttf_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
 bp_wti_w <- breakpoints(log(wti_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6)
-bp_brent_w <- breakpoints(log(brent_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 3)
+bp_brent_w <- breakpoints(log(brent_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6)
 
 
 bp_hh_m <- breakpoints(log(hh_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
-bp_jkm_m <- breakpoints(log(jkm_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
+bp_jkm_m <- breakpoints(log(jkm_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
 bp_nbp_m <- breakpoints(log(nbp_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 5)
 bp_ttf_m <- breakpoints(log(ttf_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4)
 bp_wti_m <- breakpoints(log(wti_monthly) ~ 1, format.times = TRUE, h = 0.1 , breaks = 6)
-bp_brent_m <- breakpoints(log(brent_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 3 )
+bp_brent_m <- breakpoints(log(brent_monthly) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
 bp_eu_m <- breakpoints(log(wb_eu_ng) ~ 1, format.times = TRUE,h = 0.1, breaks = 5)
 bp_jap_m <- breakpoints(log(wb_japan_lng) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
 
@@ -160,6 +160,9 @@ eu_daily_log_seqtests <- doseqtests("Y", data = df_eu, prewhit = 0, eps1=0.10, m
 
 df_jap <- data.frame(Y=as.matrix(log(wb_japan_lng)), date=time(log(wb_japan_lng)))
 jap_daily_log_seqtests <- doseqtests("Y", data = df_jap, prewhit = 0, eps1=0.10, m = 8)
+
+df_hh_monthly <- data.frame(Y=as.matrix(brent_monthly_log), date=time(brent_monthly_log))
+doorder("Y", data = df_hh_monthly, ic ="LWZ")
 
 #UD Max tests for all daily data
 tezt_1 <- dotest("Y", data = df_hh, prewhit = 0, eps1=0.10, m = 8)
@@ -475,42 +478,39 @@ legend('topleft', legend=c("log(Brent daily)"),
 # now for weekly
 
 par( mfrow= c(3,2), mai = c(0.4, 0.3, 0.1, 0.2))
-
-plot(log(hh_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black")
+plot(log(hh_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black") #plot 1
 lines(fitted(bp_hh_w), col = "blue", lwd = 0.8)
 lines(confint(bp_hh_w))
 legend('topleft', legend=c("log(HH weekly)"),
        col=c("black"), lty=1, cex=1)
-
-plot(log(jkm_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black")
+plot(log(jkm_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black") #plot 2
 lines(fitted(bp_jkm_w), col = "blue", lwd = 0.8)
 lines(confint(bp_jkm_w))
 legend('topleft', legend=c("log(JKM weekly)"),
        col=c("black"), lty=1, cex=1)
-
-plot(log(nbp_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black")
+plot(log(nbp_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black") #plot 3
 lines(fitted(bp_nbp_w), col = "blue", lwd = 0.8)
 lines(confint(bp_nbp_w))
 legend('topleft', legend=c("log(NBP weekly)"),
        col=c("black"), lty=1, cex=1)
-
-plot(log(ttf_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black")
+plot(log(ttf_weekly),  xlab="Time", ylab="USD/ MMBtu", col = "black") #plot 4
 lines(fitted(bp_ttf_w), col = "blue", lwd = 0.8)
 lines(confint(bp_ttf_w))
 legend('topleft', legend=c("log(TTF weekly)"),
        col=c("black"), lty=1, cex=1 )
-
-plot(log(wti_weekly),  xlab="Time", ylab="Dollars per Barrel", col = "black")
+plot(log(wti_weekly),  xlab="Time", ylab="Dollars per Barrel", col = "black") # plot 5
 lines(fitted(bp_wti_w), col = "blue", lwd = 0.8)
 lines(confint(bp_wti_w))
 legend('topleft', legend=c("log(WTI weekly)"),
        col=c("black"), lty=1, cex=1)
-
-plot(log(brent_weekly),  xlab="Time", ylab="Dollars per Barrel", col = "black")
+plot(log(brent_weekly),  xlab="Time", ylab="Dollars per Barrel", col = "black") # plot 6
 lines(fitted(bp_brent_w), col = "blue", lwd = 0.8)
 lines(confint(bp_brent_w))
 legend('topleft', legend=c("log(Brent weekly)"),
        col=c("black"), lty=1, cex=1)
+
+
+for(i in )
 
 
 
