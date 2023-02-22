@@ -78,8 +78,8 @@ aTSA::pp.test(diff(hh_prices_01))
 aTSA::kpss.test(diff(hh_prices_01))
 # hh wekly
 
-adf.test(ts_hh_weekly)
-aTSA::pp.test(ts_hh_weekly)
+adf.test(log(hh_weekly))
+aTSA::pp.test(hh_weekly_log)
 pp.test(ts_hh_weekly)
 adf.test(diff(ts_hh_weekly))
 pp.test(diff(ts_hh_weekly))
@@ -342,6 +342,35 @@ aTSA::pp.test(wb_japan_lng)
 aTSA::pp.test(diff(wb_japan_lng))
 aTSA::kpss.test(wb_japan_lng)
 aTSA::kpss.test(diff(wb_japan_lng))
+
+
+# for loop
+
+
+for(i in log_ts_names){
+  print(i)
+  aTSA::kpss.test(diff(get(i)))
+}
+
+aTSA::adf.test(diff(log(wb_japan_lng)))
+
+
+# Zivot andrews testL
+
+ur.za(y, model = c("intercept", "trend", "both"), lag=NULL)
+
+length(log(ttf_daily))
+
+
+ur.za(hh_daily)
+ur.
+
+for(i in log_ts_names){
+  print(i)
+  ur.za((get(i)))
+}
+
+
 
 
 
