@@ -8,14 +8,7 @@ TVECM.HStest
 
 # we test monthly first: 
 
-hh_wti <- cbind(diff(hh_monthly_log), diff(wti_monthly_log))
-hh_brent <- cbind(diff(hh_monthly_log), diff(brent_monthly_log))
-hh_ttf <- cbind(diff(hh_monthly_log), diff(ttf_monthly_log))
-hh_jkm <- cbind(diff(hh_monthly_log), diff(jkm_monthly_log))
-hh_nbp <- cbind(diff(hh_monthly_log), diff(nbp_monthly_log))
-
-
-hh#TVECM.HStest(data, lag=1, ngridTh=300, trim=0.05, 
+#hTVECM.HStest(data, lag=1, ngridTh=300, trim=0.05, 
  #            nboot=100, fixed.beta=NULL,  intercept=TRUE, 
 #             boot.type=c("FixedReg", "ResBoot"), 
 #             hpc=c("none", "foreach"))
@@ -33,8 +26,55 @@ hh#TVECM.HStest(data, lag=1, ngridTh=300, trim=0.05,
 
 # intercept: Logical. Whether an intercept has to be included in the VECM
 
-result_1 <- TVECM.HStest(hh_wti[,c(1:2)])
+# GREGORY HANSEN SUBSAMPLES, DAILY DATA
+
+# BRENT 0th SEGMENT
+y <- window(hh_daily_log, start = time(hh_daily_log)[1] ,  end = time(hh_daily_log)[4430])   
+x <- window(brent_daily_log, start = time(hh_daily_log)[1], end = time(hh_daily_log)[4430]) 
+hh_brent_0_gh_data <- cbind(y,x)
+hh_brent_0_gh <- TVECM.HStest(hh_brent_0_gh[,c(1:2)])
+hh_brent_0_gh
+summary(hh_brent_0_gh)
+plot(hh_brent_0_gh)
+tvecm_brent_hh_0 <- TVECM(hh_brent_0_gh_data,  nthresh = 2, common = c("All"))
+tvecm_brent_hh_0_res <- residuals(tvec)
+
+# BRENT 1st SEGMENT 
+y <- window(hh_daily_log, start = time(hh_daily_log)[4430] ,  end = time(hh_daily_log)[9425])   
+x <- window(brent_daily_log, start = time(hh_daily_log)[4430], end = time(hh_daily_log)[9425]) 
+hh_brent_1_gh <- cbind(y,x)
+hh_brent_1_gh <- TVECM.HStest(hh_brent_1_gh[,c(1:2)])
+hh_brent_1_gh
+summary(hh_brent_1_gh)
+
+# NBP 0th segment
+
+y <- window(hh_daily_log, start = time(nbp_daily_log)[1] ,  end = time(nbp_daily_log)[4959])   
+x <- window(nbp_daily_log, start = time(nbp_daily_log)[1], end = time(nbp_daily_log)[4959]) 
+hh_nbp_0_gh <- cbind(y,x)
+hh_nbp_0_gh <- TVECM.HStest(hh_nbp_0_gh[,c(1:2)])
+hh_nbp_0_gh
+summary(hh_nbp_0_gh)
+
+# NBP 1st SEGMENT 
+y <- window(hh_daily_log, start =  time(nbp_daily_log)[4959] ,  end = time(nbp_daily_log)[length(nbp_daily_log)])   
+x <- window(nbp_daily_log, start =  time(nbp_daily_log)[4959], end = time(nbp_daily_log)[length(nbp_daily_log)]) 
+hh_nbp_1_gh <- cbind(y,x)
+hh_nbp_1_gh <- TVECM.HStest(hh_nbp_1_gh[,c(1:2)])
+dev.off()
+tvec <- TVECM(hh_nbp_1_gh[,c(1:2)], nthresh=2,lag=1, ngridBeta=20, ngridTh=30, plot=TRUE,trim=0.05, common="All")
+print(tvec)
+summary(tvec)
+toLatex(tvec)
+
+
+
+
+
+rresult_1 <- TVECM.HStest(hh_wti[,c(1:2)])
+result_1
 result_2 <- TVECM.HStest(hh_brent[,c(1:2)])
+result_2
 
 # adjust the time length of each of these
 
@@ -42,7 +82,7 @@ result_3 <- TVECM.HStest(hh_ttf[,c(1:2)])
 result_4 <- TVECM.HStest(hh_jkm[,c(1:2)])
 
 result_5 <- TVECM.HStest(hh_nbp[,c(1:2)])
-hh_nbp <- hh_nbp[-309,]
+result_5
 
 
 # null of no cointegration
@@ -70,11 +110,8 @@ DOLS_result <- cointRegD(x, y, deter, kmax = c("k4"))
 
 
 
-cointRegD(wti_monthly_log, hh_monthly_log, deter, kmax = c("k12"))
-summary(lm(y~x))
 
-library(aod)
-
+library(a
 # we can add in an intercept -- though we want the intercept to be 0: 
 
 
