@@ -1,87 +1,115 @@
-# LOADING PACKAGES #########################
+# LOADING PACKAGES ############################################################
 
 library(strucchange)
 library(mbreaks)
 
-# PERFOMRING BREAKTESTING 
-
-ts_names
-
-ts_names
-vec <- seq(2, 38, 2)
-log_ts_names <- ts_names[vec]
-
-lm.model <- hh_monthly ~ 1
-fs <- Fstats(lm.model, data = hh_monthly)
-plot(fs, pval=TRUE)
-plot(fs, aveF=TRUE)
-sctest(fs, type="expF")
-plot(fs)
-dev.off()m
-
-bp_hh_m <- breakpoints(lm.model, format.times = TRUE)
-confint(bp_hh_m)
-plot(hh_monthly,  xlab="Time", ylab="USD/ MMBtu", col = "black")
-lines(fitted(bp_hh_m, breaks = 1), col = "blue", lwd = 0.8)
-#lines(confint(bp_ttf_w), lwd = 1)
-
-gefp(lm.model)
-
-
-bh.efp <- gefp(hh_monthly ~ 1,  data = hh_monthly)
-plot(bh.efp, aveF = TRUE)
-plot(bh.efp, functional = meanL2BB)
-
-
-#  NEW
-ocus.nile <- efp(hh_monthly ~ 1, type = "OLS-CUSUM")
-plot(ocus.nile)
-# the peak here indiciates where the structural break is, around 2009/2010
-
-
-#boundaries corresponding to a supF test at the 5% significance level.
-fs.nile <- Fstats(hh_daily ~ 1)
-dev.off()
-plot(fs.nile)
-bp.nile <- breakpoints(hh_monthly~1)
-plot(bp.nile)
-bp1 <- breakpoints(bp.nile, breaks = 1)
-fm0.nile <- lm(hh_monthly ~ 1)
-nile.fac <- breakfactor(bp1)
-fm1.nile <- lm(hh_monthly ~ nile.fac - 1)
-coef(fm1.nile)
-
-
-#
-
-bp.oil <- breakpoints(log(hh_monthly) ~ 1)
-bp.oil_2 <- breakpoints(log(hh_weekly) ~ 1)
-
-bp.oil
-dev.off()
-plot(hh_monthly,  xlab="Time", ylab="USD/ MMBtu", col = "black")
-lines(fitted(bp.oil, breaks = 4), col = "blue", lwd = 0.8)
-#Again, a summary of this object would give information about the estimated breakpoints and
-#the associated RSS and BIC of partitions with m = 0, . . . , 5 breakpoints. For illustration, Figure 11 depicts the BIC, which is almost identical for 3 and 4 breaks. Hence, we first extract the
-#segmentation with 3 breaks
-bp3 <- breakpoints(bp.oil, breaks = 5)
-bp3 <- breakpoints(bp.oil_2, breaks = 5)
-#and then we use the OLS-based CUSUM for checking for additional breaks in the mean.
-ocus.oil <- efp(log(hh_monthly) ~ breakfactor(bp3), type = "OLS-CUSUM")
-ocus.oil_2 <- efp(log(hh_weekly) ~ breakfactor(bp3), type = "OLS-CUSUM")
-plot(ocus.oil_2)
-plot(ocus.oil)
-
+# DAILY BREAKPOINTS #############################################################
 
 # the below takes ~ 30 minuts to run
-bp_hh_d <- breakpoints(log(hh_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5)
-bp_jkm_d <- breakpoints(log(jkm_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 ) 
+# use the below in GAUSS for NBP, Henry hub, WTI, and Brent
+bp_hh_d <- breakpoints(hh_daily_log ~ 1, format.times = TRUE, h = 0.1, breaks = 5)
+# breakpoints at levels are just:
+# 1159 2168 4367 6532 8483 
+# 2000(95) 2003(9) 2009(18) 2014(358) 2020(119) 
+# breakpoints at first differences are :
+bp_hh_d <- breakpoints(diff(hh_daily_log) ~ 1, format.times = TRUE, h = 0.1, breaks = 5)
+
+#breakpoints including a trend term are:
+trend <- 1:length(hh_daily_log)
+bp_hh_d <- breakpoints(diff(log(hh_daily)) ~ 1 + trend, format.times = TRUE, h = 0.1, breaks = 5)
+
+
+
+bp_jkm_d <- breakpoints(log(jkm_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5 ) 
 bp_nbp_d <- breakpoints(log(nbp_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 4 )
-bp_ttf_d <- breakpoints(log(ttf_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
-bp_wti_d <- breakpoints(log(wti_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 6  )
+bp_ttf_d <- breakpoints(log(ttf_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5 )
+# the below give spurios results
+bp_wti_d <- breakpoints(log(wti_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5  )
 bp_brent_d <- breakpoints(log(brent_daily) ~ 1, format.times = TRUE, h = 0.1, breaks = 5 )
 
+# GAUSS CARRION-I-SILVESTRE BREAKPOINTS ####################################
 
+# BRENT diff, model 3
+
+ts.plot(brent_daily_log, wti_daily_log)
+abline(v = time(brent_daily_log)[1747], col = "red")
+abline(v = time(brent_daily_log)[2873], col = "red")
+abline(v = time(brent_daily_log)[4324], col = "red")
+abline(v = time(brent_daily_log)[6781], col = "red")
+abline(v = time(brent_daily_log)[8479], col = "red")
+
+# WTI diff, model 3
+
+plot(wti_daily_log)
+abline(v = time(wti_daily_log)[982])
+abline(v = time(wti_daily_log)[2242])
+abline(v = time(wti_daily_log)[3309])
+abline(v = time(wti_daily_log)[6576])
+abline(v = time(wti_daily_log)[8445])
+982.00000 
+2242.0000 
+3309.0000 
+6576.0000 
+8445.0000 points
+
+# HH diff, model 3
+dev.off()
+plot(hh_daily_log)
+abline(v = time(hh_daily_log)[1752.0000 ], col = "blue", lty = 2)
+abline(v = time(hh_daily_log)[3131.0000 ], col = "blue", lty =2)
+abline(v = time(hh_daily_log)[4625.0000 ], col = "blue", lty = 2)
+abline(v = time(hh_daily_log)[6212.0000 ], col = "blue", lty =2 )
+abline(v = time(hh_daily_log)[7649.0000], col = "blue", lty = 2)
+abline(v = time(hh_daily_log)[1159.0000 ], col = "red")
+abline(v = time(hh_daily_log)[2168.0000 ], col = "red")
+abline(v = time(hh_daily_log)[4367.0000 ], col = "red")
+abline(v = time(hh_daily_log)[6532.0000 ], col = "red")
+abline(v = time(hh_daily_log)[8483.0000], col = "red")
+
+# TTF diff, model 3
+765.00000 
+1242.0000 
+2185.0000 
+2976.0000 
+3790.0000 points
+
+# compare with our calculated breakpoints
+dev.off()
+plot(ttf_daily_log)
+abline(v = time(ttf_daily_log)[765], col = "blue", lty = 2)
+abline(v = time(ttf_daily_log)[1242.0000 ], col = "blue", lty =2)
+abline(v = time(ttf_daily_log)[2185.0000 ], col = "blue", lty = 2)
+abline(v = time(ttf_daily_log)[2976.0000 ], col = "blue", lty =2 )
+abline(v = time(ttf_daily_log)[3790.0000], col = "blue", lty = 2)
+abline(v = time(ttf_daily_log)[469.0000 ], col = "red")
+abline(v = time(ttf_daily_log)[1929.0000 ], col = "red")
+abline(v = time(ttf_daily_log)[2861.0000 ], col = "red")
+abline(v = time(ttf_daily_log)[3355.0000 ], col = "red")
+abline(v = time(ttf_daily_log)[4187.0000], col = "red")
+
+
+# TTF levels, model 3 (slightly different break points)
+765.00000  # same  
+1430.0000  # diff of ~ 200 
+2444.0000  # diff of ~ 250 
+2977.0000  # same 
+3790.0000  # same
+# compare TTF breakpoints between CI diff and CI levels 
+plot(ttf_daily_log)
+abline(v = time(ttf_daily_log)[765], col = "blue", lty = 2)
+abline(v = time(ttf_daily_log)[1242.0000 ], col = "blue", lty =2)
+abline(v = time(ttf_daily_log)[2185.0000 ], col = "blue", lty = 2)
+abline(v = time(ttf_daily_log)[2976.0000 ], col = "blue", lty =2 )
+abline(v = time(ttf_daily_log)[3790.0000], col = "blue", lty = 2)
+abline(v = time(ttf_daily_log)[765 ], col = "red")
+abline(v = time(ttf_daily_log)[1430.0000 ], col = "red")
+abline(v = time(ttf_daily_log)[2444.0000 ], col = "red")
+abline(v = time(ttf_daily_log)[2977.0000 ], col = "red")
+abline(v = time(ttf_daily_log)[3790.0000], col = "red")
+
+
+
+# BREAKPOINTS WEEKLY AND MONTHLY ###############################################
 # below is very quick, < 1 minute
 bp_hh_w <- breakpoints(log(hh_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6 )
 bp_jkm_w <- breakpoints(log(jkm_weekly) ~ 1, format.times = TRUE, h = 0.1, breaks = 6)
@@ -150,7 +178,6 @@ df_brent <- data.frame(Y=as.matrix(brent_daily_log), date=time(brent_daily_log))
 brent_daily_log_seqtests <- doseqtests("Y", data = df_brent, prewhit = 0, eps1=0.10, m = 8)
 
 
-
 df_wti <- data.frame(Y=as.matrix(wti_daily_log), date=time(wti_daily_log))
 wti_daily_log_seqtests <- doseqtests("Y", data = df_wti, prewhit = 0, eps1=0.10, m = 8)
 
@@ -171,12 +198,10 @@ tezt_3 <- dotest("Y", data = df_ttf, prewhit = 0, eps1=0.10, m = 8)
 tezt_4 <- dotest("Y", data = df_jkm, prewhit = 0, eps1=0.10, m = 8)
 tezt_5 <- dotest("Y", data = df_brent, prewhit = 0, eps1=0.10, m = 8)
 tezt_6 <- dotest("Y", data = df_wti, prewhit = 0, eps1=0.10, m = 8)
-# below are monthly resilts
+# below are monthly results for european and japanese LNG
 dotest("Y", data = df_eu, prewhit = 0, eps1=0.10, m = 8)
 dotest("Y", data = df_jap, prewhit = 0, eps1=0.10, m = 8)
 
-# 10:48 start, 11:04 approx first daily ended; 11;20 TTF,11:25 brent daily #
-# this code does not run in the background
 
 # TESTING BREAKPOINTS VALIDITY  ###################################################
 
@@ -217,7 +242,7 @@ ocus.hh_m_4 <- efp(log(hh_monthly) ~ breakfactor(bp_hh_m_4), type = "OLS-CUSUM")
 ocus.hh_m_5 <- efp(log(hh_monthly) ~ breakfactor(bp_hh_m_5), type = "OLS-CUSUM")
 ocus.hh_m_6 <- efp(log(hh_monthly) ~ breakfactor(bp_hh_m_6), type = "OLS-CUSUM")
 
-# if it crosses the boundary then there is a structura change at that point
+# if it crosses the boundary then there is a structural change at that point
 # each successive model takes into account previous breakpoints
 par( mfrow= c(3,2), mai = c(0.3, 0.3, 0.3, 0.3))
 plot(ocus.hh_m_1)
@@ -304,7 +329,7 @@ legend('topleft', legend=c("log(NBP monthly)"),
        col=c("black"), lty=1, cex=1)
 
 
-#SIG TESTS ###################################################
+#SIG TESTS ####################################################################
 
 fs.hh_d <- Fstats(hh_daily ~ 1)
 fs.jkm_d <- Fstats(jkm_daily ~ 1)
@@ -347,14 +372,18 @@ fs.brent_d <- Fstats(hh_daily ~ 1)
 
 #BIC TESTING ###################################################
 # daily
-dev.off
-par( mfrow= c(4,3), mai = c(0.3, 0.3, 0.3, 0.3))
+dev.off()
+par( mfrow= c(3,2), mai = c(0.3, 0.3, 0.3, 0.3))
 plot(bp_hh_d, main="log(HH daily)", ylab="BIC")
 plot(bp_jkm_d,  main="log(JKM daily)") 
 plot(bp_nbp_d, main="log(NBP daily)")
 plot(bp_ttf_d, main="log(TTF daily)")
 plot(bp_wti_d, main="log(WTI daily)")
 plot(bp_brent_d, main="log(Brent daily)")
+
+
+
+# weekly
 plot(bp_hh_w, main="log(HH weekly)")
 plot(bp_jkm_w,  main="log(JKM weekly)") 
 plot(bp_nbp_w, main="log(NBP weekly)")
@@ -375,11 +404,9 @@ plot(bp_jap_m, main="log(WB Jap LNG monthly)")
 
 
 
-# PLOTING BREAKPOINTS ###################################################
-# first shifts up
-# second shifts to the left
-# third stretches up 
-# monthly
+# PLOTING BREAKPOINTS ########################################################
+
+
 par( mfrow= c(4,2), mai = c(0.4, 0.3, 0.1, 0.2))
 
 plot(log(hh_monthly),  xlab="Time", ylab="USD/ MMBtu", col = "black")
@@ -510,7 +537,75 @@ legend('topleft', legend=c("log(Brent weekly)"),
        col=c("black"), lty=1, cex=1)
 
 
-for(i in )
+# EXPLORATORY ANALYSIS ########################################################
+
+ts_names
+
+ts_names
+vec <- seq(2, 38, 2)
+log_ts_names <- ts_names[vec]
+
+lm.model <- hh_monthly ~ 1
+fs <- Fstats(lm.model, data = hh_monthly)
+plot(fs, pval=TRUE)
+plot(fs, aveF=TRUE)
+sctest(fs, type="expF")
+plot(fs)
+dev.off()m
+
+bp_hh_m <- breakpoints(lm.model, format.times = TRUE)
+confint(bp_hh_m)
+plot(hh_monthly,  xlab="Time", ylab="USD/ MMBtu", col = "black")
+lines(fitted(bp_hh_m, breaks = 1), col = "blue", lwd = 0.8)
+#lines(confint(bp_ttf_w), lwd = 1)
+
+gefp(lm.model)
+
+
+bh.efp <- gefp(hh_monthly ~ 1,  data = hh_monthly)
+plot(bh.efp, aveF = TRUE)
+plot(bh.efp, functional = meanL2BB)
+
+
+#  NEW
+ocus.nile <- efp(hh_monthly ~ 1, type = "OLS-CUSUM")
+plot(ocus.nile)
+# the peak here indiciates where the structural break is, around 2009/2010
+
+
+#boundaries corresponding to a supF test at the 5% significance level.
+
+fs.nile <- Fstats(hh_daily ~ 1)
+dev.off()
+plot(fs.nile)
+bp.nile <- breakpoints(hh_monthly~1)
+plot(bp.nile)
+bp1 <- breakpoints(bp.nile, breaks = 1)
+fm0.nile <- lm(hh_monthly ~ 1)
+nile.fac <- breakfactor(bp1)
+fm1.nile <- lm(hh_monthly ~ nile.fac - 1)
+coef(fm1.nile)
+
+
+#
+
+bp.oil <- breakpoints(log(hh_monthly) ~ 1)
+bp.oil_2 <- breakpoints(log(hh_weekly) ~ 1)
+
+bp.oil
+dev.off()
+plot(hh_monthly,  xlab="Time", ylab="USD/ MMBtu", col = "black")
+lines(fitted(bp.oil, breaks = 4), col = "blue", lwd = 0.8)
+
+
+bp3 <- breakpoints(bp.oil, breaks = 5)
+bp3 <- breakpoints(bp.oil_2, breaks = 5)
+#and then we use the OLS-based CUSUM for checking for additional breaks in the mean.
+ocus.oil <- efp(log(hh_monthly) ~ breakfactor(bp3), type = "OLS-CUSUM")
+ocus.oil_2 <- efp(log(hh_weekly) ~ breakfactor(bp3), type = "OLS-CUSUM")
+plot(ocus.oil_2)
+plot(ocus.oil)
+
 
 
 
