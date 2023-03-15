@@ -60,26 +60,28 @@ par(new = "TRUE")
 plot(wti_daily_real, axes = TRUE, yaxt = "n", ylab = "", col = cols_1[1], lwd = 2, , xaxs='i',yaxs='i', ylim = c(0,200))
 axis(4)
 mtext("Dollars per Barrel", side=4, line=3)
+par(xpd=FALSE)
 abline(v = time(nbp_daily_log)[1426], lty = 2, col = alpha("black", 0.5), lwd = 2) 
 abline(v = time(nbp_daily_log)[2844], lty = 2, col = alpha("black", 0.5), lwd = 2) 
 abline(v = time(nbp_daily_log)[4324], lty = 2, col = alpha("black", 0.5), lwd = 2) 
 abline(v = time(nbp_daily_log)[7489], lty = 2, col = alpha("black", 0.5), lwd = 2) 
 abline(v = time(nbp_daily_log)[8432], lty = 2, col = alpha("black", 0.5), lwd = 2) 
 par(xpd=TRUE)
-legend("bottomleft", legend = c("Henry Hub", "WTI"),  col = c(cols_1[9], cols_1[1]), lty = c(1,1), lwd = 3, cex=0.9, inset = c(-0.08,-0.2))
+legend("bottomleft", legend = c("Henry Hub", "WTI"),  col = c(cols_1[9], cols_1[1]), lty = c(1,1), lwd = 3, cex=0.9, inset = c(-0.07,-0.15))
 par(xpd=FALSE)
 rect(xleft = time(nbp_daily_log)[1426], xright = time(nbp_daily_log)[2844], ybottom = par("usr")[3], ytop = par("usr")[4], 
-     border = NA, col = adjustcolor(cols_1[9],, alpha = 0.15))
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
 rect(xleft = time(nbp_daily_log)[4324], xright = time(nbp_daily_log)[7489], ybottom = par("usr")[3], ytop = par("usr")[4], 
-     border = NA, col = adjustcolor(cols_1[9],, alpha = 0.15))
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
 rect(xleft = time(nbp_daily_log)[8432], xright = time(nbp_daily_log)[9404], ybottom = par("usr")[3], ytop = par("usr")[4], 
-     border = NA, col = adjustcolor(cols_1[9],, alpha = 0.15))
-text(x = 1999, y = 190, expression(paste(beta, "= 0.13***")), cex = 1.1)
-text(x = 2003, y = 190, expression(paste(beta, "=0.15***")), cex = 1.1)
-text(x = 2007, y = 190, expression(paste(beta, "=0.03*")), cex = 1.1)
-text(x = 2013, y = 190, expression(paste(beta, "=0.02***")), cex = 1.1)
-text(x = 2019, y = 190, expression(paste(beta, "=0.01")), cex = 1.1)
-text(x = 2021.5, y = 190, expression(paste(beta, "=0.07***")), cex = 1.1)
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
+par(xpd=TRUE)
+text(x = 1999, y = 208, expression(paste(beta, "= 0.13***")), cex = 1.4)
+text(x = 2003, y = 208, expression(paste(beta, "=0.15***")), cex = 1.4)
+text(x = 2007, y = 208, expression(paste(beta, "=0.03*")), cex = 1.4)
+text(x = 2013, y = 208, expression(paste(beta, "=0.02***")), cex = 1.4)
+text(x = 2019, y = 208, expression(paste(beta, "=0.01")), cex = 1.4)
+text(x = 2021.5, y = 208, expression(paste(beta, "=0.07***")), cex = 1.4)
 
 
 # WTI DOLS GH #################################################################
@@ -90,7 +92,7 @@ x <- window(wti_daily_real, start = time(hh_daily_log)[1], end = time(hh_daily_l
 n <- length(y)
 # no time trend 
 deter <- cbind(level = rep(1,n))
-wti_0_gh <- cointRegD(x, y, deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC"  )
+wti_0_gh <- cointRegD(y, x, deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC"  )
 wti_0_gh
 # segment 1
 y <- window(hh_daily_real, start = time(hh_daily_log)[4385] ,  end = time(hh_daily_log)[length(hh_daily)])   
@@ -163,7 +165,7 @@ nbp_1_gh
 
 # MAKI TEST 5 BREAKS ###########################################################
 
-# BRENT MAKI TEST 5 BREAKS DOLS  ###############################################
+# WTI MAKI TEST 5 BREAKS DOLS  ###############################################
 y <- window(hh_daily_real, start = time(nbp_daily_log)[1] ,  end = time(nbp_daily_log)[1426])   
 x <- window(wti_daily_real, start = time(nbp_daily_log)[1], end = time(nbp_daily_log)[1426]) 
 n <- length(y)
@@ -206,452 +208,391 @@ deter <- cbind(level = rep(1,n))
 wti_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
 wti_5_m  
 
-# BRENT
+
+par(mar=c(5,4,4,4)+.1)
+plot(hh_daily_real, ylab = "USD/MMBtu", col = cols_1[9], lwd =2, xaxs='i',yaxs='i', ylim = c(0,30))
+par(new = "TRUE")
+plot(wti_daily_real, axes = TRUE, yaxt = "n", ylab = "", col = cols_1[1], lwd = 2, , xaxs='i',yaxs='i', ylim = c(0,200))
+axis(4)
+mtext("Dollars per Barrel", side=4, line=3)
+abline(v = time(nbp_daily_log)[1426], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[2844], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[4324], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[7489], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[8432], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+par(xpd=TRUE)
+legend("bottomleft", legend = c("Henry Hub", "WTI"),  col = c(cols_1[9], cols_1[1]), lty = c(1,1), lwd = 3, cex=0.9, inset = c(-0.07,-0.15))
+par(xpd=FALSE)
+rect(xleft = time(nbp_daily_log)[1426], xright = time(nbp_daily_log)[2844], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor(cols_1[9],, alpha = 0.15))
+rect(xleft = time(nbp_daily_log)[4324], xright = time(nbp_daily_log)[7489], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor(cols_1[9],, alpha = 0.15))
+rect(xleft = time(nbp_daily_log)[8432], xright = time(nbp_daily_log)[9404], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor(cols_1[9],, alpha = 0.15))
+text(x = 1999, y = 190, expression(paste(beta, "= 0.13***")), cex = 1.1)
+text(x = 2003, y = 190, expression(paste(beta, "=0.15***")), cex = 1.1)
+text(x = 2007, y = 190, expression(paste(beta, "=0.03*")), cex = 1.1)
+text(x = 2013, y = 190, expression(paste(beta, "=0.02***")), cex = 1.1)
+text(x = 2019, y = 190, expression(paste(beta, "=0.01")), cex = 1.1)
+text(x = 2021.5, y = 190, expression(paste(beta, "=0.07***")), cex = 1.1)
+
+# BRENT MAKI TEST 5 BREAKS DOLS  #################################################
 
 
-# JKM
+date_decimal(as.numeric(time(nbp_daily_log)))[1426]
+y <- window(hh_daily_real, start = time(nbp_daily_log)[1] ,  end = time(nbp_daily_log)[1426])   
+x <- window(brent_daily_real, start = time(nbp_daily_log)[1], end = time(nbp_daily_log)[1426]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+brent_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+brent_0_m  
+
+#06-Feb-2007,
+y <- window(hh_daily_real, start = time(nbp_daily_log)[1426] ,  end = time(nbp_daily_log)[3656])   
+x <- window(brent_daily_real, start = time(nbp_daily_log)[1426], end = time(nbp_daily_log)[3656]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+brent_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+brent_1_m  
+
+#09-Jan-2010,
+y <- window(hh_daily_real, start = time(nbp_daily_log)[3656] ,  end = time(nbp_daily_log)[4723])   
+x <- window(brent_daily_real, start = time(nbp_daily_log)[3656], end = time(nbp_daily_log)[4723]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+brent_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+brent_2_m  
+
+#07-Feb-2014
+y <- window(hh_daily_real, start = time(nbp_daily_log)[4723] ,  end = time(nbp_daily_log)[6212])   
+x <- window(brent_daily_real, start = time(nbp_daily_log)[4723], end = time(nbp_daily_log)[6212]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+brent_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+brent_3_m  
+
+# 14-Mar-2020
+y <- window(hh_daily_real, start = time(nbp_daily_log)[6212] ,  end = time(nbp_daily_log)[8437])   
+x <- window(brent_daily_real, start = time(nbp_daily_log)[6212], end = time(nbp_daily_log)[8437]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+brent_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+brent_4_m  
+
+# end
+y <- window(hh_daily_real, start = time(nbp_daily_log)[8437] ,  end = time(hh_daily_real)[9425])   
+x <- window(brent_daily_real, start = time(nbp_daily_log)[8437], end = time(hh_daily_real)[9425]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+brent_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+brent_5_m  
 
 
-# NBP
 
+par(mar=c(5,4,4,4)+.1)
+plot(hh_daily_real, ylab = "USD/MMBtu", col = cols_1[9], lwd =2, xaxs='i',yaxs='i', ylim = c(0,30))
+par(new = "TRUE")
+plot(brent_daily_real, axes = TRUE, yaxt = "n", ylab = "", col = cols_1[2], lwd = 2, , xaxs='i',yaxs='i', ylim = c(0,210))
+axis(4)
+mtext("Dollars per Barrel", side=4, line=3)
+par(xpd=FALSE)
+abline(v = time(nbp_daily_log)[1426], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[3656], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[4723], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[6212], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[8437], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+par(xpd=TRUE)
+legend("bottomleft", legend = c("Henry Hub", "Brent"),  col = c(cols_1[9], cols_1[2]), lty = c(1,1), lwd = 3, cex=0.9, inset = c(-0.07,-0.15))
+par(xpd=FALSE)
+rect(xleft = time(nbp_daily_log)[1426], xright = time(nbp_daily_log)[3656], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.2))
+rect(xleft = time(nbp_daily_log)[4723], xright = time(nbp_daily_log)[6212], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.2))
+rect(xleft = time(nbp_daily_log)[8437], xright =  time(hh_daily_real)[9425], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.2))
+par(xpd=TRUE)
+text(x = 1999, y = 220, expression(paste(beta, "= 0.13***")), cex = 1.4)
+text(x = 2004.5, y = 220, expression(paste(beta, "=0.097***")), cex = 1.4)
+text(x = 2008.7, y = 220, expression(paste(beta, "=0.08***")), cex = 1.4)
+text(x = 2012, y = 220, expression(paste(beta, "=-0.03***")), cex = 1.4)
+text(x = 2017, y = 220, expression(paste(beta, "=0.03***")), cex = 1.4)
+text(x = 2021.7, y = 220, expression(paste(beta, "=0.07***")), cex = 1.4)
+# NBP MAKI TEST 5 BREAKS DOLS  #################################################
+
+
+
+# 11-Dec-2000, 30-Aug-2005, 07-Mar-2009, 07-Feb-2014, 06-Apr-2020
+y <- window(hh_daily_real, start = time(nbp_daily_log)[1] ,  end = time(nbp_daily_log)[1409])   
+x <- window(nbp_daily_real, start = time(nbp_daily_log)[1], end = time(nbp_daily_log)[1409]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_0_m  
+plot(x, ylim = c(2,20))
+par(new = "TRUE")
+plot(y, ylim = c(2,20))
+par(new = "TRUE")
+plot(0.61539 + 1.13550*x, ylim = c(2,20), col = "red")
+RMSE <- sqrt(sum((y - (0.61539 + 1.13550*x))^2)/n)
+R2 <- 1 - sum((y - (0.61539 + 1.13550*x))^2)/sum((y - mean(y))^2)
+AR2 <- 1 - ( ((1-R2)*(n-1)) / (n-1-1) )
+
+
+
+y <- window(hh_daily_real, start = time(nbp_daily_log)[1409] ,  end = time(nbp_daily_log)[3131])   
+x <- window(nbp_daily_real, start = time(nbp_daily_log)[1409], end = time(nbp_daily_log)[3131]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_1_m  
+
+y <- window(hh_daily_real, start = time(nbp_daily_log)[3131] ,  end = time(nbp_daily_log)[4415])   
+x <- window(nbp_daily_real, start = time(nbp_daily_log)[3131], end = time(nbp_daily_log)[4415]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_2_m  
+
+y <- window(hh_daily_real, start = time(nbp_daily_log)[4415] ,  end = time(nbp_daily_log)[6212])   
+x <- window(nbp_daily_real, start = time(nbp_daily_log)[4415], end = time(nbp_daily_log)[6212]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_3_m  
+
+y <- window(hh_daily_real, start = time(nbp_daily_log)[6212] ,  end = time(nbp_daily_log)[8460])   
+x <- window(nbp_daily_real, start = time(nbp_daily_log)[6212], end = time(nbp_daily_log)[8460]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_4_m  
+
+y <- window(hh_daily_real, start = time(nbp_daily_log)[8460] ,  end = time(nbp_daily_real)[9404])   
+x <- window(nbp_daily_real, start = time(nbp_daily_log)[8460], end = time(nbp_daily_real)[9404]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_5_m  
+
+col_green <- brewer.pal(9,"YlGn")
+plot(hh_daily_real, ylab = "USD/MMBtu", col = cols_1[9], lwd =2, xaxs='i',yaxs='i', ylim = c(0,80))
+par(new = "TRUE")
+par(xpd=FALSE)
+plot(nbp_daily_real, axes = FALSE, yaxt = "n", ylab = "", col = col_green[8], lwd = 2, , xaxs='i',yaxs='i', ylim = c(0,80))
+abline(v = time(nbp_daily_log)[1409], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[3131], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[4415], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[6212], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(nbp_daily_log)[8460], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+par(xpd=TRUE)
+legend("bottomleft", legend = c("Henry Hub", "NBP"),  col = c(cols_1[9], col_green[8]), lty = c(1,1), lwd = 3, cex=0.9, inset = c(-0.07,-0.15))
+par(xpd=FALSE)
+rect(xleft = time(nbp_daily_log)[1409], xright = time(nbp_daily_log)[3131], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.2))
+rect(xleft = time(nbp_daily_log)[4415], xright = time(nbp_daily_log)[6212], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.2))
+rect(xleft = time(nbp_daily_log)[8460], xright = time(nbp_daily_log)[9404], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.2))
+par(xpd=TRUE)
+text(x = 1999, y = 83, expression(paste(beta, "= 1.14***")), cex = 1.4)
+text(x = 2003.5, y = 83, expression(paste(beta, "=0.68***")), cex = 1.4)
+text(x = 2007.5, y = 83, expression(paste(beta, "=0.36*")), cex = 1.4)
+text(x = 2011.8, y = 83, expression(paste(beta, "=-0.11*")), cex = 1.4)
+text(x = 2017.5, y = 83, expression(paste(beta, "=0.32***")), cex = 1.4)
+text(x = 2021.6, y = 83, expression(paste(beta, "=0.11***")), cex = 1.4)
+
+
+# TTF MAKI TEST 5 BREAKS DOLS  #################################################
+
+# 17-Sep-2011, 07-Feb-2014, 03-Jun-2016, 08-Mar-2019, 15-Feb-2021 
+date_decimal(as.numeric(time(nbp_daily_log)))[1426]
+y <- window(hh_daily_real, start = time(ttf_daily)[1] ,  end = time(ttf_daily)[623])   
+x <- window(ttf_daily_real, start = time(ttf_daily)[1], end = time(ttf_daily)[623]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+ttf_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_0_m  
+
+y <- window(hh_daily_real, start = time(ttf_daily)[623] ,  end = time(ttf_daily)[1496])   
+x <- window(ttf_daily_real, start = time(ttf_daily)[623], end = time(ttf_daily)[1496]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+ttf_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_1_m  
+
+y <- window(hh_daily_real, start = time(ttf_daily)[1496] ,  end = time(ttf_daily)[2342])   
+x <- window(ttf_daily_real, start = time(ttf_daily)[1496], end = time(ttf_daily)[2342]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+ttf_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_2_m  
+
+y <- window(hh_daily_real, start = time(ttf_daily)[2342] ,  end = time(ttf_daily)[3350])   
+x <- window(ttf_daily_real, start = time(ttf_daily)[2342], end = time(ttf_daily)[3350]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+ttf_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_3_m  
+
+y <- window(hh_daily_real, start = time(ttf_daily)[3350] ,  end = time(ttf_daily)[4059])   
+x <- window(ttf_daily_real, start = time(ttf_daily)[3350], end = time(ttf_daily)[4059]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+ttf_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_4_m  
+
+y <- window(hh_daily_real, start = time(ttf_daily)[4059] ,  end = time(ttf_daily)[4691])   
+x <- window(ttf_daily_real, start = time(ttf_daily)[4059], end = time(ttf_daily)[4691]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+ttf_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_5_m  
+
+hh_daily_real_window <- window(hh_daily_real, start = time(ttf_daily)[1] ,  end = time(ttf_daily)[4691])   
+
+col_purp <- brewer.pal(9,"PRGn")
+plot(hh_daily_real_window, ylab = "USD/MMBtu", col = cols_1[9], lwd =2, xaxs='i',yaxs='i', ylim = c(0,100))
+par(new = "TRUE")
+plot(ttf_daily_real, axes = FALSE, yaxt = "n", ylab = "", col = col_purp[2], lwd = 2, , xaxs='i',yaxs='i', ylim = c(0,100))
+par(xpd=FALSE)
+abline(v = time(ttf_daily)[623], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(ttf_daily)[1496], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(ttf_daily)[2342], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(ttf_daily)[3350], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(ttf_daily)[4059], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+par(xpd=TRUE)
+legend("bottomleft", legend = c("Henry Hub", "TTF"),  col = c(cols_1[9], col_purp[2]), lty = c(1,1), lwd = 3, cex=0.9, inset = c(-0.05,-0.15))
+par(xpd=FALSE)
+rect(xleft = time(ttf_daily)[623], xright = time(ttf_daily)[1496], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
+rect(xleft = time(ttf_daily)[2342], xright = time(ttf_daily)[3350], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
+rect(xleft = time(ttf_daily)[4059], xright = time(ttf_daily)[4691], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
+par(xpd=TRUE)
+text(x = 2010.8, y = 104, expression(paste(beta,   "= -0.11*")), cex = 1.4)
+text(x = 2013, y = 104, expression(paste(beta, "= 0.38***")), cex = 1.4)
+text(x = 2015.2, y = 104, expression(paste(beta, "= 0.58***")), cex = 1.4)
+text(x = 2017.8, y = 104, expression(paste(beta, "= 0.04*")), cex = 1.4)
+text(x = 2020.2, y = 104, expression(paste(beta, "= 0.21***")), cex = 1.4)
+text(x = 2022, y = 104, expression(paste(beta, "= 0.08***")), cex = 1.4)
+
+
+#JKM MAKI 3 BREAKS ######################################################################
+
+#04-Jun-2015 & 20-Jan-2018 & 19-Oct-2021 
+
+#date_decimal(as.numeric(time(nbp_daily_log)))[1426]
+
+y <- window(hh_daily_real, start = time(jkm_daily)[1] ,  end = time(jkm_daily)[307])   
+x <- window(jkm_daily_real, start = time(jkm_daily)[1], end = time(jkm_daily)[307]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+jkm_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+jkm_0_m  
+
+y <- window(hh_daily_real, start = time(jkm_daily)[307] ,  end = time(jkm_daily)[1268])   
+x <- window(jkm_daily_real, start = time(jkm_daily)[307], end = time(jkm_daily)[1268]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+jkm_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+jkm_1_m  
+
+y <- window(hh_daily_real, start = time(jkm_daily)[1268] ,  end = time(jkm_daily)[2635])   
+x <- window(jkm_daily_real, start = time(jkm_daily)[1268], end = time(jkm_daily)[2635]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+jkm_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+jkm_2_m  
+
+y <- window(hh_daily_real, start = time(jkm_daily)[2635] ,  end = time(jkm_daily)[3014])   
+x <- window(jkm_daily_real, start = time(jkm_daily)[2635], end = time(jkm_daily)[3014]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+jkm_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+jkm_3_m  
+
+
+col_pink <- brewer.pal(9,"PiYG")
+hh_daily_real_window <- window(hh_daily_real, start =time(jkm_daily)[1], end = time(jkm_daily)[3014] )
+col_purp <- brewer.pal(9,"PRGn")
+plot(hh_daily_real_window, ylab = "USD/MMBtu", col = cols_1[9], lwd =2, xaxs='i',yaxs='i', ylim = c(0,80))
+par(new = "TRUE")
+plot(jkm_daily_real, axes = FALSE, yaxt = "n", ylab = "", col = col_pink[1], lwd = 2, , xaxs='i',yaxs='i', ylim = c(0,80))
+par(xpd=FALSE)
+abline(v = time(jkm_daily)[307], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(jkm_daily)[1268], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+abline(v = time(jkm_daily)[2635], lty = 2, col = alpha("black", 0.5), lwd = 2) 
+par(xpd=TRUE)
+legend("bottomleft", legend = c("Henry Hub", "JKM"),  col = c(cols_1[9], col_pink[1]), lty = c(1,1), lwd = 3, cex=0.9, inset = c(-0.05,-0.15))
+par(xpd=FALSE)
+rect(xleft = time(jkm_daily)[307], xright = time(jkm_daily)[1268], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
+rect(xleft = time(jkm_daily)[2635], xright = time(jkm_daily)[3014], ybottom = par("usr")[3], ytop = par("usr")[4], 
+     border = NA, col = adjustcolor("grey", alpha = 0.15))
+par(xpd=TRUE)
+text(x = 2015, y = 83, expression(paste(beta,   "= 0.18***")), cex = 1.4)
+text(x = 2016.6, y = 83, expression(paste(beta, "= 0.15***")), cex = 1.4)
+text(x = 2020, y = 83, expression(paste(beta, "= 0.15***")), cex = 1.4)
+text(x = 2022.4, y = 83, expression(paste(beta, "= 0.04***")), cex = 1.4)
+
+
+# DOLS PRE SPECIFIED NATURAL GAS BENCHMARKS #####################################
+
+# SPLIT AT February 2016, or jkm_daily[550]
+
+# JKM 
+
+y <- window(hh_daily_real, start = time(jkm_daily)[1] ,  end = time(jkm_daily)[550])   
+x <- window(jkm_daily_real, start = time(jkm_daily)[1], end = time(jkm_daily)[550]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+jkm_0_2016 <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+jkm_0_2016  
+
+y <- window(hh_daily_real, start = time(jkm_daily)[550] ,  end = time(jkm_daily)[3014])   
+x <- window(jkm_daily_real, start = time(jkm_daily)[550], end = time(jkm_daily)[3014]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+jkm_1_2016 <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+jkm_1_2016 
+
+# NBP 
+
+y <- window(hh_daily_real, start = time(nbp_daily)[1] ,  end = time(jkm_daily_real)[550])   
+x <- window(nbp_daily_real, start = time(nbp_daily)[1], end = time(jkm_daily_real)[550]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_0_2016 <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_0_2016  
+
+y <- window(hh_daily_real, start = time(jkm_daily)[550] ,  end = time(nbp_daily_real)[9404])   
+x <- window(nbp_daily_real, start = time(jkm_daily)[550], end = time(nbp_daily_real)[9404]) 
+n <- length(y)
+deter <- cbind(level = rep(1,n))
+nbp_1_2016 <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+nbp_1_2016  
 
 # TTF 
 
-
-
-
-
-date_decimal(as.numeric(time(nbp_daily_log)))[3524]
-
-# NBP #
-# Breaks
-
-
-# end  = 2006-09-26
-y <- window(hh_daily_real, start = time(nbp_daily_log)[1] ,  end = time(nbp_daily_log)[3524])   
-x <- window(nbp_daily_real, start = time(nbp_daily_log)[1], end = time(nbp_daily_log)[3524]) 
+y <- window(hh_daily_real, start = time(ttf_daily)[1] ,  end = time(jkm_daily)[550])   
+x <- window(ttf_daily_real, start = time(ttf_daily)[1], end = time(jkm_daily)[550]) 
 n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-nbp_0_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_0_m_trend
-# with no time trend 
 deter <- cbind(level = rep(1,n))
-nbp_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_0_m
+ttf_0_2016 <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_0_2016  
 
-# end = 2008-01-27
-y <- window(hh_daily_log, start =  time(nbp_daily_log)[3524] ,  end = time(nbp_daily_log)[4011])   
-x <- window(nbp_daily_log, start =  time(nbp_daily_log)[3524], end = time(nbp_daily_log)[4011]) 
+y <- window(hh_daily_real, start = time(jkm_daily)[550] ,  end = time(ttf_daily_real)[4691])   
+x <- window(ttf_daily_real, start = time(jkm_daily)[550], end = time(ttf_daily_real)[4691]) 
 n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-nbp_1_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_1_m_trend
-# with no time trend 
 deter <- cbind(level = rep(1,n))
-nbp_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_1_m
-
-# end = 2016-06-03
-y <- window(hh_daily_log, start =  time(nbp_daily_log)[4011] ,  end = time(nbp_daily_log)[7059])   
-x <- window(nbp_daily_log, start =  time(nbp_daily_log)[4011], end = time(nbp_daily_log)[7059]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-nbp_2_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_2_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-nbp_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_2_m
-
-# end = 2018-01-01,
-y <- window(hh_daily_log, start =  time(nbp_daily_log)[7059] ,  end = time(nbp_daily_log)[7635])   
-x <- window(nbp_daily_log, start =  time(nbp_daily_log)[7059], end = time(nbp_daily_log)[7635]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-nbp_3_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_3_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-nbp_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_3_m
-
-# end = 2021-02-15
-y <- window(hh_daily_log, start =  time(nbp_daily_log)[7635] ,  end = time(nbp_daily_log)[8775])   
-x <- window(nbp_daily_log, start =  time(nbp_daily_log)[7635], end = time(nbp_daily_log)[8775]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-nbp_4_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_4_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-nbp_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
-nbp_4_m
-
-# end = end of sample data
-y <- window(hh_daily_log, start =  time(nbp_daily_log)[8775] ,  end = time(nbp_daily_log)[length(nbp_daily_log)])   
-x <- window(nbp_daily_log, start =  time(nbp_daily_log)[8775], end = time(nbp_daily_log)[length(nbp_daily_log)]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-nbp_5_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-nbp_5_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-nbp_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-nbp_5_m
-
-
-# TTF
-
-date_decimal(as.numeric(time(nbp_daily_log)))[3524]
-
-#TTF 
-
-# end  = 2011-11-24 
-y <- window(hh_daily_log, start = time(ttf_daily_log)[1] ,  end = time(ttf_daily_log)[692])   
-x <- window(ttf_daily_log, start = time(ttf_daily_log)[1], end = time(ttf_daily_log)[692]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-ttf_0_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_0_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-ttf_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", n.lag = 1, n.lead = 6,  info.crit = "AIC")
-ttf_0_m
-
-
-dev.off()
-plot(ttf_0_m_trend, ylim = c(-0.4,0.4))
-par(new = TRUE)
-plot(ttf_0_m, col = "red", ylim = c(-0.4,0.4))
-
-# end = 2014 - 07 -03 
-y <- window(hh_daily_log, start =  time(ttf_daily_log)[692] ,  end = time(ttf_daily_log)[1643])   
-x <- window(nbp_daily_log, start =  time(ttf_daily_log)[692], end = time(ttf_daily_log)[1643]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-ttf_1_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_1_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-ttf_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_1_m
-
-# end = 2015-03-01
-y <- window(hh_daily_log, start =  time(ttf_daily_log)[1643] ,  end = time(ttf_daily_log)[1884])   
-x <- window(ttf_daily_log, start =  time(ttf_daily_log)[1643], end = time(ttf_daily_log)[1884]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-ttf_2_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_2_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-ttf_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_2_m
-
-# end = 2015-12-13
-y <- window(hh_daily_log, start =  time(ttf_daily_log)[1884] ,  end = time(ttf_daily_log)[2171])   
-x <- window(ttf_daily_log, start =  time(ttf_daily_log)[1884], end = time(ttf_daily_log)[2171]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-ttf_3_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_3_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-ttf_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_3_m
-
-# end = 2022-02-01
-y <- window(hh_daily_log, start =  time(ttf_daily_log)[2171] ,  end = time(ttf_daily_log)[4411])   
-x <- window(ttf_daily_log, start =  time(ttf_daily_log)[2171], end = time(ttf_daily_log)[4411]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-ttf_4_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_4_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-ttf_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_4_m
-
-# end = end of sample data
-y <- window(hh_daily_log, start =  time(ttf_daily_log)[4411] ,  end = time(ttf_daily_log)[length(ttf_daily_log)])   
-x <- window(ttf_daily_log, start =  time(ttf_daily_log)[4411], end = time(ttf_daily_log)[length(ttf_daily_log)]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-ttf_5_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_5_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-ttf_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-ttf_5_m
-
-
-#JKM 
-
-
-date_decimal(as.numeric(time(jkm_daily_log)))[3524]
-
-# end  = 2016-06-02
-y <- window(hh_daily_log, start = time(jkm_daily_log)[1] ,  end = time(jkm_daily_log)[672])   
-x <- window(jkm_daily_log, start = time(jkm_daily_log)[1], end = time(jkm_daily_log)[672]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-jkm_0_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_0_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-jkm_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_0_m
-
-# end = 2020-03-02
-y <- window(hh_daily_log, start =  time(jkm_daily_log)[672] ,  end = time(jkm_daily_log)[2040])   
-x <- window(jkm_daily_log, start =  time(jkm_daily_log)[672], end = time(jkm_daily_log)[2040]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-jkm_1_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_1_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-jkm_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_1_m
-
-# end = 2020-10-13
-y <- window(hh_daily_log, start =  time(jkm_daily_log)[2040] ,  end = time(jkm_daily_log)[2265])   
-x <- window(jkm_daily_log, start =  time(jkm_daily_log)[2040], end = time(jkm_daily_log)[2265]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-jkm_2_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_2_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-jkm_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_2_m
-
-# end = 2021-05-01
-y <- window(hh_daily_log, start =  time(jkm_daily_log)[2265] ,  end = time(jkm_daily_log)[2465])   
-x <- window(jkm_daily_log, start =  time(jkm_daily_log)[2265], end = time(jkm_daily_log)[2465]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-jkm_3_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_3_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-jkm_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_3_m
-
-# end = 2022-02-06
-y <- window(hh_daily_log, start =  time(jkm_daily_log)[2465] ,  end = time(jkm_daily_log)[2746])   
-x <- window(jkm_daily_log, start =  time(jkm_daily_log)[2465], end = time(jkm_daily_log)[2746]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-jkm_4_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_4_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-jkm_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_4_m
-
-# end = end of sample data
-y <- window(hh_daily_log, start =  time(jkm_daily_log)[2746] ,  end = time(jkm_daily_log)[length(jkm_daily_log)])   
-x <- window(jkm_daily_log, start =  time(jkm_daily_log)[2746], end = time(jkm_daily_log)[length(jkm_daily_log)]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-jkm_5_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_5_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-jkm_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-jkm_5_m
+ttf_1_2016 <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "BIC")
+ttf_1_2016  
 
 
 
-# BRENT 
 
-date_decimal(as.numeric(time(brent_daily_log)))[2818]
-
-# end  = 2003-02-27
-y <- window(hh_daily_log, start = time(brent_daily_log)[1] ,  end = time(brent_daily_log)[2218])   
-x <- window(brent_daily_log, start = time(brent_daily_log)[1], end = time(brent_daily_log)[2218]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-brent_0_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_0_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-brent_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_0_m
-
-# end = 2004-10-20
-y <- window(hh_daily_log, start =  time(brent_daily_log)[2218] ,  end = time(brent_daily_log)[2818])   
-x <- window(brent_daily_log, start =  time(brent_daily_log)[2218], end = time(brent_daily_log)[2818]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-brent_1_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_1_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-brent_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_1_m
-
-# end = 2007-02-06
-y <- window(hh_daily_log, start =  time(brent_daily_log)[2818] ,  end = time(brent_daily_log)[3657])   
-x <- window(brent_daily_log, start =  time(brent_daily_log)[2818], end = time(brent_daily_log)[3657]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-brent_2_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_2_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-brent_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_2_m
-
-# end = 2018-11-18
-y <- window(hh_daily_log, start =  time(brent_daily_log)[3657] ,  end = time(brent_daily_log)[7957])   
-x <- window(brent_daily_log, start =  time(brent_daily_log)[3657], end = time(brent_daily_log)[7957]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-brent_3_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_3_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-brent_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_3_m
-
-# end = 2021-02-15
-y <- window(hh_daily_log, start =  time(brent_daily_log)[7957] ,  end = time(brent_daily_log)[8776])   
-x <- window(brent_daily_log, start =  time(brent_daily_log)[7957], end = time(brent_daily_log)[8776]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-brent_4_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_4_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-brent_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_4_m
-
-# end = end of sample data
-y <- window(hh_daily_log, start =  time(brent_daily_log)[8776],  end = time(hh_daily_log)[length(hh_daily_log)])   
-x <- window(brent_daily_log, start =  time(brent_daily_log)[8776], end = time(hh_daily_log)[length(hh_daily_log)]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-brent_5_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_5_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-brent_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-brent_5_m
-
-
-# WTI
-
-date_decimal(as.numeric(time(brent_daily_log)))[2818]
-
-# end  = 2003-01-22
-y <- window(hh_daily_log, start = time(wti_daily_log)[1] ,  end = time(wti_daily_log)[2182])   
-x <- window(wti_daily_log, start = time(wti_daily_log)[1], end = time(wti_daily_log)[2182]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-wti_0_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_0_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-wti_0_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_0_m
-
-# end = 2004-10-20 (SAME)
-y <- window(hh_daily_log, start =  time(wti_daily_log)[2182] ,  end = time(brent_daily_log)[2818])   
-x <- window(wti_daily_log, start =  time(wti_daily_log)[2182], end = time(brent_daily_log)[2818]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-wti_1_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_1_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-wti_1_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_1_m
-
-# end = 2007-03-16
-y <- window(hh_daily_log, start =  time(brent_daily_log)[2818] ,  end = time(wti_daily_log)[3695])   
-x <- window(wti_daily_log, start =  time(brent_daily_log)[2818], end = time(wti_daily_log)[3695]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-wti_2_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_2_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-wti_2_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_2_m
-
-# end = 2018-01-15
-y <- window(hh_daily_log, start =  time(wti_daily_log)[3695] ,  end = time(wti_daily_log)[7650])   
-x <- window(wti_daily_log, start =  time(wti_daily_log)[3695], end = time(wti_daily_log)[7650]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-wti_3_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_3_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-wti_3_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_3_m
-
-# end = 2021-02-15 (SAME)
-y <- window(hh_daily_log, start =  time(wti_daily_log)[7650] ,  end = time(brent_daily_log)[8776])   
-x <- window(wti_daily_log, start =  time(wti_daily_log)[7650], end = time(brent_daily_log)[8776]) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-wti_4_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_4_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-wti_4_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_4_m
-
-# end = end of sample data
-y <- matrix(window(hh_daily_log, start =  time(brent_daily_log)[8776],  end = time(hh_daily_log)[length(hh_daily_log)]), ncol = 1)   
-x <- matrix(window(wti_daily_log, start =  time(brent_daily_log)[8776], end = time(hh_daily_log)[length(hh_daily_log)]), ncol = 1) 
-n <- length(y)
-# with time trend 
-deter <- cbind(level = rep(1,n), trend = 1:n )
-wti_5_m_trend <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC")
-wti_5_m_trend
-# with no time trend 
-deter <- cbind(level = rep(1,n))
-cointReg:::getLeadLag(x= x, y =y, deter=deter,  max.lag = 10, max.lead = 10, ic = c("BIC"), symmet = TRUE)
-wti_5_m <- cointRegD(x, y,  deter, bandwidth = c("nw"), kernel = "ba", kmax = c("k4"),  info.crit = "AIC", n.lead = 1, n.lag =1)
-wti_5_m
-plot(wti_5_m_trend, ylim=c(-0.7,0.7), col = "blue") # with trend
-par(new = TRUE)
-plot(wti_5_m, ylim=c(-0.7,0.7), col = "red") # without trend
-
-# WALD TESTS ###############################################################################
+# WALD TESTS ####################################################################
 
 wtest <- wald.test(Sigma = wti_1_hj$varmat, b = wti_1_hj$theta.all, Terms = 3, H0 = c(1))
 
