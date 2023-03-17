@@ -64,3 +64,8 @@ adf.test(diff(nbp_monthly_real))
 adf.test(diff(jkm_monthly_real))
 adf.test(diff(wti_monthly_real))
 adf.test(diff(brent_monthly_real))
+
+
+
+
+
